@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Anúncio Soul Dila</title>
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Textos do anúncio — a versão vem de ?v=A ou ?v=B (gancho diferente para teste A/B).
+const VERSION = new URLSearchParams(location.search).get('v') || 'A';
+const TEXT = {
+  hook: VERSION === 'B' ? ['Roupa que', 'parece férias.'] : ['Seu dia', 'pede pausa.'],
+  body1: 'Leve no corpo.',
+  body2: 'Leve na alma.',
+  grid: 'Com alma baiana.',
+  tag: 'Alma e Leveza.',
+  cta: 'Compre em souldila.com.br',
+  handle: '@souldila',
+};
+const PHOTOS = {
+  hook: 'fotos/ceu-laranja.jpg', body1: 'fotos/quimono-praia.jpg', body2: 'fotos/casal-mar.jpg',
+  grid: ['fotos/pouso-pausa.jpg', 'fotos/estampa-natureza.jpg', 'fotos/colecao-rua.jpg', 'fotos/feliz-cidade.jpg'],
+  tag: 'fotos/forte-laranja.jpg', logo: 'fotos/logo.png',
+};
+
+const W = 1080, H = 1920, FPS = 30, DURATION = 18;
+const C = { cream: '#f3ede3', ink: '#1e1814', terra: '#c4623a', soft: '#8a7a6a' };
+const FONT = '"Inter Display", Inter, sans-serif';
+const ctx = document.getElementById('c').getContext('2d');
+ctx.imageSmoothingQuality = 'high';
+
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = k => 1 - Math.pow(1 - clamp(k), 3);
+const easeInOut = k => { k = clamp(k); return k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
+
+const IMG = {};
+function load(src) { return new Promise((ok, err) => { const i = new Image(); i.onload = () => ok(i); i.onerror = err; i.src = src; }); }
+window.READY = Promise.all(
+  [PHOTOS.hook, PHOTOS.body1, PHOTOS.body2, ...PHOTOS.grid, PHOTOS.tag, PHOTOS.logo].map(s => load(s).then(i => { IMG[s] = i; }))
+).then(() => document.fonts.ready);
+
+// Draw an image covering the box, with zoom and a focus point (0..1) for the crop.
+function cover(src, x, y, w, h, zoom = 1, fx = 0.5, fy = 0.5) {
+  const im = IMG[src], s = Math.max(w / im.width, h / im.height) * zoom;
+  const dw = im.width * s, dh = im.height * s;
+  ctx.drawImage(im, x - (dw - w) * fx, y - (dh - h) * fy, dw, dh);
+}
+function card(src, cx, cy, w, h, zoom, fx, fy) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(70,45,25,0.28)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
+  ctx.fillStyle = C.cream; ctx.beginPath(); ctx.roundRect(cx - w / 2, cy - h / 2, w, h, 26); ctx.fill();
+  ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.roundRect(cx - w / 2, cy - h / 2, w, h, 26); ctx.clip();
+  cover(src, cx - w / 2, cy - h / 2, w, h, zoom, fx, fy);
+  ctx.restore();
+}
+function text(str, x, y, size, { weight = 300, color = C.ink, alpha = 1, spacing = 0, shadow = false, rise = 0 } = {}) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha *= clamp(alpha);
+  ctx.font = `${weight} ${size}px ${FONT}`; ctx.letterSpacing = `${spacing}px`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (shadow) { ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 4; }
+  ctx.fillStyle = color; ctx.fillText(str, x, y + rise);
+  ctx.restore();
+}
+// Lines fade in and rise one after another.
+function lines(arr, x, y, size, t0, t, opts = {}, gap = 1.15, stagger = 0.25) {
+  arr.forEach((s, i) => {
+    const k = easeOut(prog(t, t0 + i * stagger, t0 + i * stagger + 0.8));
+    text(s, x, y + i * size * gap, size, { ...opts, alpha: k * (opts.alpha ?? 1), rise: (1 - k) * 40 });
+  });
+}
+function label(str, y, alpha, color = C.soft) { text(str.toUpperCase(), 540, y, 26, { weight: 500, color, alpha, spacing: 9 }); }
+function grain(t) {
+  // subtle film grain keeps the flat cream from banding and feels editorial
+  ctx.save(); ctx.globalAlpha = 0.035; let s = Math.floor(t * FPS) * 9973;
+  for (let i = 0; i < 900; i++) { s = (s * 1664525 + 1013904223) >>> 0; const x = s % W; s = (s * 1664525 + 1013904223) >>> 0; const y = s % H;
+    ctx.fillStyle = i % 2 ? '#000' : '#fff'; ctx.fillRect(x, y, 2, 2); }
+  ctx.restore();
+}
+
+/* ---------- scenes: [start, end, draw(localTime)] — consecutive scenes overlap by XF for a crossfade ---------- */
+const XF = 0.45;
+const SCENES = [
+  [0.0, 2.9, l => { // hook over a full-bleed photo
+    cover(PHOTOS.hook, 0, 0, W, H, lerp(1.14, 1.02, easeOut(l / 2.9)), 0.5, 0.45);
+    const g = ctx.createLinearGradient(0, H * 0.45, 0, H); g.addColorStop(0, 'rgba(30,20,12,0)'); g.addColorStop(0.55, 'rgba(30,20,12,0.5)'); g.addColorStop(1, 'rgba(30,20,12,0.7)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    lines(TEXT.hook, 540, 1330, 116, 0.15, l, { weight: 400, color: '#fff', shadow: true });
+  }],
+  [2.9 - XF, 5.8, l => {
+    ctx.fillStyle = C.cream; ctx.fillRect(0, 0, W, H);
+    label('Soul Dila', 470, easeOut(prog(l, 0.3, 0.9)));
+    text(TEXT.body1, 540, 560, 92, { weight: 300, alpha: easeOut(prog(l, 0.4, 1.1)), rise: (1 - easeOut(prog(l, 0.4, 1.1))) * 30 });
+    card(PHOTOS.body1, 540, 1060, 960, 640, lerp(1.0, 1.12, l / 3.4), 0.55, 0.4);
+  }],
+  [5.8 - XF, 8.7, l => {
+    ctx.fillStyle = C.cream; ctx.fillRect(0, 0, W, H);
+    card(PHOTOS.body2, 540, 820, 960, 640, lerp(1.12, 1.0, l / 3.4), 0.5, 0.5);
+    text(TEXT.body2, 540, 1290, 92, { weight: 300, alpha: easeOut(prog(l, 0.4, 1.1)), rise: (1 - easeOut(prog(l, 0.4, 1.1))) * 30 });
+    label('Soul Dila', 1400, easeOut(prog(l, 0.6, 1.2)));
+  }],
+  [8.7 - XF, 12.2, l => { // quick sequence of collections in one frame
+    ctx.fillStyle = C.cream; ctx.fillRect(0, 0, W, H);
+    label('Coleções', 430, easeOut(prog(l, 0.2, 0.8)));
+    const per = 0.82, i = Math.min(PHOTOS.grid.length - 1, Math.floor(Math.max(0, l - 0.3) / per));
+    const within = Math.max(0, l - 0.3) - i * per;
+    if (i > 0 && within < 0.18) card(PHOTOS.grid[i - 1], 540, 960, 820, 820, 1.06, 0.5, 0.35);
+    ctx.save(); ctx.globalAlpha *= i > 0 ? easeOut(within / 0.18) : 1;
+    card(PHOTOS.grid[i], 540, 960, 820, 820, lerp(1.0, 1.06, within / per), 0.5, 0.35);
+    ctx.restore();
+    text(TEXT.grid, 540, 1500, 84, { weight: 300, alpha: easeOut(prog(l, 0.5, 1.2)), rise: (1 - easeOut(prog(l, 0.5, 1.2))) * 30 });
+  }],
+  [12.2 - XF, 15.0, l => {
+    cover(PHOTOS.tag, 0, 0, W, H, lerp(1.02, 1.14, l / 3.2), 0.5, 0.4);
+    const g = ctx.createLinearGradient(0, 0, 0, H * 0.5); g.addColorStop(0, 'rgba(30,20,12,0.5)'); g.addColorStop(1, 'rgba(30,20,12,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    text(TEXT.tag, 540, 520, 110, { weight: 400, color: '#fff', shadow: true, alpha: easeOut(prog(l, 0.5, 1.3)), rise: (1 - easeOut(prog(l, 0.5, 1.3))) * 40 });
+  }],
+  [15.0 - XF, DURATION, l => { // end card
+    ctx.fillStyle = C.cream; ctx.fillRect(0, 0, W, H);
+    const k = easeOut(prog(l, 0.4, 1.4)), logo = IMG[PHOTOS.logo], lw = 640, lh = lw * logo.height / logo.width;
+    ctx.save(); ctx.globalAlpha *= k; ctx.drawImage(logo, 540 - lw / 2, 780 - lh / 2 + (1 - k) * 30, lw, lh); ctx.restore();
+    label('Alma e Leveza', 900, easeOut(prog(l, 0.9, 1.6)), C.ink);
+    const kc = easeOut(prog(l, 1.3, 2.0));
+    ctx.save(); ctx.globalAlpha *= kc; ctx.fillStyle = C.terra;
+    ctx.font = `500 46px ${FONT}`; const tw = ctx.measureText(TEXT.cta).width;
+    ctx.beginPath(); ctx.roundRect(540 - tw / 2 - 56, 1110 - 52 + (1 - kc) * 20, tw + 112, 104, 52); ctx.fill(); ctx.restore();
+    text(TEXT.cta, 540, 1112 + (1 - kc) * 20, 46, { weight: 500, color: '#fff', alpha: kc });
+    text(TEXT.handle, 540, 1250, 40, { weight: 400, color: C.soft, alpha: easeOut(prog(l, 1.7, 2.3)) });
+  }],
+];
+
+window.render = function (t) {
+  ctx.clearRect(0, 0, W, H);
+  // dip-to-cream transition: the outgoing scene fades into cream, then the next one fades in
+  for (const [start, end, draw] of SCENES) {
+    if (t < start || t > end) continue;
+    const half = start + XF / 2;
+    if (start > 0 && t < start + XF) {
+      ctx.save(); ctx.globalAlpha = easeInOut(prog(t, start, half)); ctx.fillStyle = C.cream; ctx.fillRect(0, 0, W, H); ctx.restore();
+    }
+    ctx.save(); ctx.globalAlpha = start === 0 ? 1 : easeInOut(prog(t, half, start + XF));
+    draw(t - start); ctx.restore();
+  }
+  grain(t);
+};
+window.META = { W, H, FPS, DURATION, VERSION };
+window.READY.then(() => window.render(Number(new URLSearchParams(location.search).get('t') || 1.5)));
+</script>
+</body>
+</html>
