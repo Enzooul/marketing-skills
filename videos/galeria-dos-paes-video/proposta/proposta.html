@@ -1,0 +1,312 @@
+<title>Vídeos para a Galeria dos Pães</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a single reading column with a two-column hero (pitch + phone with the video), then plain sections separated by space, not boxes. */
+:root {
+  --bg: #fffcf7;
+  --surface: #f5ede1;
+  --ink: #2a1d14;
+  --muted: #76655a;
+  --accent: #a85a1f;
+  --gold: #c98a2b;
+  --line: #e7dccd;
+  --on-accent: #ffffff;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17110c; --surface: #221a13; --ink: #f3e9dc; --muted: #b5a392;
+    --accent: #e0985a; --gold: #e8b45c; --line: #3a2e24; --on-accent: #1a120c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17110c; --surface: #221a13; --ink: #f3e9dc; --muted: #b5a392;
+  --accent: #e0985a; --gold: #e8b45c; --line: #3a2e24; --on-accent: #1a120c; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 17px; line-height: 1.6;
+}
+.wrap {
+  max-width: 1040px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 64px;
+  display: flex; flex-direction: column; gap: 72px;
+}
+h1, h2, h3 { font-family: var(--display); line-height: 1.12; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 1.2rem; font-weight: 700; }
+p { margin: 0; }
+.eyebrow { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.lead { font-size: 1.15rem; color: var(--muted); max-width: 60ch; }
+.hl { color: var(--gold); }
+section { display: flex; flex-direction: column; gap: 22px; }
+section > p, section > ul { max-width: 68ch; }
+ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 48px; align-items: center; }
+.hero-text { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.phone {
+  justify-self: center; width: min(300px, 100%);
+  border-radius: 34px; padding: 10px; background: #0f0b08;
+  box-shadow: 0 24px 60px -24px rgba(42, 29, 20, 0.55);
+}
+.phone video { display: block; width: 100%; aspect-ratio: 9 / 16; border-radius: 26px; background: #000; object-fit: cover; }
+.note {
+  font-size: 0.92rem; color: var(--muted);
+  border-left: 3px solid var(--gold); padding: 4px 0 4px 14px; max-width: 62ch;
+}
+
+/* timeline */
+.timeline { overflow-x: auto; }
+.timeline table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.97rem; }
+.timeline th, .timeline td { text-align: left; padding: 12px 14px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.timeline th { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.timeline td:first-child { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; color: var(--accent); }
+.timeline td:nth-child(2) { font-family: var(--display); font-weight: 500; }
+.bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; max-width: 100%; }
+.bar span { background: var(--gold); opacity: 0.85; }
+.bar span:nth-child(even) { background: var(--accent); }
+.bar span.end { background: var(--muted); opacity: 0.5; }
+.bar-legend { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* formats */
+.formats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; align-items: end; }
+.format { display: flex; flex-direction: column; gap: 12px; }
+.format video { width: 100%; border-radius: 14px; background: #000; display: block; }
+.format.reels video { aspect-ratio: 9 / 16; max-width: 280px; }
+.format.feed video { aspect-ratio: 4 / 5; max-width: 340px; }
+.format p { font-size: 0.95rem; color: var(--muted); }
+
+/* reasons / lists in two columns */
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 40px; }
+.cols > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.cols p { color: var(--muted); font-size: 0.98rem; }
+
+/* packages */
+.packages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; }
+.pkg {
+  display: flex; flex-direction: column; gap: 14px; padding: 24px;
+  border: 1px solid var(--line); border-radius: 16px; min-width: 0;
+}
+.pkg.rec { background: var(--surface); border-color: var(--accent); }
+.pkg .tag { align-self: flex-start; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--on-accent); background: var(--accent); padding: 3px 10px; border-radius: 999px; }
+.pkg .kind { font-size: 0.85rem; color: var(--muted); }
+.pkg ul { font-size: 0.95rem; flex: 1; }
+.pkg .price { font-size: 0.9rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+
+/* ideas */
+.ideas { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; max-width: none; counter-reset: idea; }
+.ideas li { padding: 12px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 2.2em 1fr; gap: 4px; min-width: 0; }
+.ideas li::before { counter-increment: idea; content: counter(idea, decimal-leading-zero); font-family: var(--display); color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+.ideas b { font-weight: 600; }
+.ideas span { color: var(--muted); font-size: 0.95rem; grid-column: 2; }
+
+/* steps */
+.steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; max-width: none; counter-reset: step; }
+.steps li { display: flex; flex-direction: column; gap: 6px; padding-top: 14px; border-top: 3px solid var(--accent); min-width: 0; }
+.steps li::before { counter-increment: step; content: "Passo " counter(step); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.steps p { color: var(--muted); font-size: 0.95rem; }
+
+footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 20px; }
+
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; gap: 32px; }
+  .packages { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .wrap { gap: 56px; padding-block: 24px 48px; }
+  .formats, .cols, .ideas { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; }
+  .format.reels video, .format.feed video { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { video { animation: none; } }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-text">
+      <span class="eyebrow">Proposta · Galeria dos Pães · Vilas do Atlântico</span>
+      <h1>Vídeos que dão <span class="hl">vontade de passar aí</span> agora.</h1>
+      <p class="lead">Uma proposta de vídeos curtos para o Instagram e para anúncios da Galeria dos Pães: Reels, Stories e feed, gravados na padaria, editados no ritmo certo e pensados para trazer gente do bairro até o balcão.</p>
+      <p class="note">O vídeo ao lado é um <strong>modelo de demonstração</strong>, montado com imagens ilustrativas de banco de imagens. Ele mostra o estilo, o ritmo e a estrutura. Na versão contratada, tudo é gravado com os produtos, o forno e a equipe da Galeria dos Pães.</p>
+    </div>
+    <div class="phone">
+      <video src="reels.mp4" poster="reels.jpg" autoplay muted loop playsinline controls aria-label="Vídeo de demonstração em formato Reels"></video>
+    </div>
+  </header>
+
+  <section>
+    <span class="eyebrow">Por que funciona</span>
+    <h2>O vídeo, segundo a segundo</h2>
+    <p>Em vídeo curto a pessoa decide nos primeiros segundos se continua assistindo. Por isso cada trecho tem uma função. Os cortes caem no tempo da música (um corte a cada duas batidas), o que dá ritmo sem pressa, e o nome da padaria fica na tela do primeiro ao último segundo.</p>
+    <div>
+      <div class="bar" aria-hidden="true">
+        <span style="flex:2.37"></span><span style="flex:3.16"></span><span style="flex:1.57"></span><span style="flex:3.17"></span><span style="flex:2.36"></span><span class="end" style="flex:3.17"></span>
+      </div>
+      <div class="bar-legend"><span>0 s</span><span>15,8 s</span></div>
+    </div>
+    <div class="timeline">
+      <table>
+        <thead><tr><th>Tempo</th><th>Texto na tela</th><th>Imagem</th><th>Função</th></tr></thead>
+        <tbody>
+          <tr><td>0,0–2,4 s</td><td>Sentiu o cheirinho de pão quente?</td><td>Croissant sendo partido</td><td>Gancho. Movimento e textura já no primeiro quadro, com uma pergunta que faz imaginar o cheiro.</td></tr>
+          <tr><td>2,4–5,5 s</td><td>Fresquinho, saindo do forno.</td><td>Forno abrindo e pão sendo fatiado</td><td>Prova de frescor, o principal motivo para escolher uma padaria.</td></tr>
+          <tr><td>5,5–7,1 s</td><td>Pães, doces e delícias.</td><td>Doces folhados</td><td>Variedade: a Galeria é padaria e delicatessen.</td></tr>
+          <tr><td>7,1–10,3 s</td><td>E um cafezinho pra acompanhar.</td><td>Café saindo da máquina e latte art</td><td>Sugere a combinação pão + café.</td></tr>
+          <tr><td>10,3–12,6 s</td><td>Seu café da manhã começa aqui.</td><td>Mesa de café da manhã</td><td>Coloca a pessoa no momento de consumo.</td></tr>
+          <tr><td>12,6–15,8 s</td><td>Passa aqui hoje</td><td>Cartão com marca e endereço</td><td>Chamada para ação direta e localização.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Um vídeo, vários lugares</span>
+    <h2>Cada vídeo sai em dois formatos</h2>
+    <div class="formats">
+      <div class="format reels">
+        <video src="reels.mp4" poster="reels.jpg" muted loop playsinline controls preload="none" aria-label="Formato vertical 9 por 16"></video>
+        <h3>Vertical 9:16</h3>
+        <p>Reels, Stories e anúncios nessas posições. Os textos ficam fora das áreas cobertas pelos botões e pela legenda do Instagram.</p>
+      </div>
+      <div class="format feed">
+        <video src="feed.mp4" poster="feed.jpg" muted loop playsinline controls preload="none" aria-label="Formato 4 por 5"></video>
+        <h3>Feed 4:5</h3>
+        <p>Feed do perfil e anúncios no feed. Ocupa mais espaço na tela do que um vídeo quadrado.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Por que vídeo</span>
+    <h2>Pão é um produto que se vende pelos olhos</h2>
+    <div class="cols">
+      <div><h3>Desperta vontade na hora</h3><p>Crocância, vapor, café escorrendo. O vídeo mostra o que a foto não mostra, e a decisão de passar na padaria costuma ser tomada no impulso.</p></div>
+      <div><h3>Chega em quem ainda não segue</h3><p>Os Reels são recomendados pelo Instagram também para quem não segue o perfil, o que ajuda a ser descoberto por vizinhos novos.</p></div>
+      <div><h3>Anúncio só para o bairro</h3><p>Nos anúncios da Meta dá para mostrar o vídeo só para pessoas num raio próximo da padaria. Sem gastar com quem nunca viria até aqui.</p></div>
+      <div><h3>Constância cria hábito</h3><p>Aparecer toda semana no celular de quem mora perto faz a Galeria ser lembrada na hora do café da manhã.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">O que vamos gravar</span>
+    <h2>A Galeria dos Pães de verdade</h2>
+    <p>O modelo usa imagens de banco. O trabalho contratado troca tudo por imagens reais da padaria, que são o que gera confiança em quem mora perto:</p>
+    <ul>
+      <li>A fornada da manhã saindo, com o horário real na tela.</li>
+      <li>Os produtos mais vendidos, em close, partindo, recheando, servindo.</li>
+      <li>O som real: a casca crocante quebrando, a máquina de café, o balcão.</li>
+      <li>Quem faz o pão e quem atende, com autorização de uso de imagem.</li>
+      <li>A fachada e a localização, para a pessoa reconhecer o lugar na rua.</li>
+    </ul>
+  </section>
+
+  <section>
+    <span class="eyebrow">Pacotes</span>
+    <h2>Três formas de começar</h2>
+    <div class="packages">
+      <article class="pkg">
+        <span class="kind">Teste, sem mensalidade</span>
+        <h3>Piloto</h3>
+        <ul>
+          <li>1 manhã de gravação na padaria</li>
+          <li>3 vídeos editados</li>
+          <li>Cada vídeo em 9:16 e 4:5</li>
+          <li>Legenda pronta para cada post</li>
+        </ul>
+        <p class="price">Valor: a combinar na conversa</p>
+      </article>
+      <article class="pkg rec">
+        <span class="tag">Recomendado</span>
+        <span class="kind">Mensal</span>
+        <h3>Fornada do mês</h3>
+        <ul>
+          <li>2 gravações por mês</li>
+          <li>8 vídeos editados por mês</li>
+          <li>Formatos 9:16 e 4:5</li>
+          <li>Legendas e sugestão de dias para postar</li>
+          <li>Resumo mensal: o que mais funcionou</li>
+        </ul>
+        <p class="price">Valor: a combinar na conversa</p>
+      </article>
+      <article class="pkg">
+        <span class="kind">Mensal, com anúncios</span>
+        <h3>Vitrine cheia</h3>
+        <ul>
+          <li>Tudo do Fornada do mês</li>
+          <li>Criação e acompanhamento dos anúncios no Instagram e Facebook</li>
+          <li>Teste de duas chamadas por vídeo, mantendo a que vencer</li>
+          <li>Relatório mensal de resultados</li>
+        </ul>
+        <p class="price">Valor: a combinar. A verba dos anúncios é definida pela padaria e paga direto à Meta.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Anúncios</span>
+    <h2>Como os anúncios funcionariam</h2>
+    <div class="cols">
+      <div><h3>Quem vê</h3><p>Pessoas num raio próximo da Av. Praia de Itapoan, ajustado junto com vocês.</p></div>
+      <div><h3>Objetivo</h3><p>Ser lembrado no bairro, levar visitas ao perfil ou gerar mensagens, se a padaria atender por WhatsApp.</p></div>
+      <div><h3>Teste antes de investir mais</h3><p>O mesmo vídeo roda com duas chamadas diferentes, por exemplo "Sentiu o cheirinho de pão quente?" e "Seu café da manhã começa aqui.". A que trouxer mais resultado recebe a verba.</p></div>
+      <div><h3>Verba sob controle</h3><p>Começa com um valor pequeno, definido por vocês, e só aumenta o que mostrar resultado.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Ideias de pauta</span>
+    <h2>Doze vídeos que dá para gravar na Galeria</h2>
+    <ol class="ideas">
+      <li><b>A primeira fornada do dia</b><span>Horário real na tela, porta do forno abrindo.</span></li>
+      <li><b>Do forno à vitrine</b><span>O caminho do pão em 15 segundos.</span></li>
+      <li><b>O som da casca</b><span>Partir o pão perto do microfone. Sem texto, só o barulho.</span></li>
+      <li><b>Quem faz o seu pão</b><span>Apresentar a equipe, um por vídeo.</span></li>
+      <li><b>Qual é o seu?</b><span>Três pães na tela e a pergunta nos comentários.</span></li>
+      <li><b>Produto da semana</b><span>Lançamento ou destaque, com preço se vocês quiserem.</span></li>
+      <li><b>Do grão à xícara</b><span>O café sendo preparado, passo a passo.</span></li>
+      <li><b>Massa crua, pão pronto</b><span>Antes e depois em acelerado.</span></li>
+      <li><b>O pedido de sempre</b><span>Um cliente fiel conta o que pede, com autorização.</span></li>
+      <li><b>Mesa de café da manhã</b><span>Montando uma mesa com os produtos da casa.</span></li>
+      <li><b>Datas do ano</b><span>São João, Dia dos Pais, Natal, com os produtos que a casa tiver.</span></li>
+      <li><b>Saiu agora</b><span>Aviso de fornada nos Stories, para quem está por perto.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <span class="eyebrow">Como medimos</span>
+    <h2>O que vamos acompanhar</h2>
+    <div class="cols">
+      <div><h3>Atenção</h3><p>Visualizações e quantas pessoas passam dos primeiros segundos.</p></div>
+      <div><h3>Interesse</h3><p>Salvamentos, compartilhamentos e visitas ao perfil.</p></div>
+      <div><h3>Ação</h3><p>Cliques em "como chegar", mensagens recebidas e novos seguidores.</p></div>
+      <div><h3>Balcão</h3><p>Uma frase ou cupom do vídeo ("vi no Instagram") para saber quem veio por causa dele.</p></div>
+    </div>
+    <p class="note">Não prometemos números de seguidores ou de vendas. Prometemos vídeos bem feitos, constância e medição para decidir juntos o que continuar fazendo.</p>
+  </section>
+
+  <section>
+    <span class="eyebrow">Próximos passos</span>
+    <h2>Para começar</h2>
+    <ol class="steps">
+      <li><h3>Conversa rápida</h3><p>20 minutos para conhecer os produtos mais vendidos e os horários de fornada.</p></li>
+      <li><h3>Gravação piloto</h3><p>Uma manhã na padaria, sem atrapalhar o atendimento.</p></li>
+      <li><h3>Primeiros vídeos</h3><p>Entrega dos 3 vídeos para aprovação de vocês antes de postar.</p></li>
+      <li><h3>Decisão</h3><p>Com os primeiros resultados em mãos, escolhemos o pacote mensal.</p></li>
+    </ol>
+    <p>Para a gravação, vamos precisar de: a lista dos produtos que vocês mais querem mostrar, o melhor horário para gravar a fornada e a autorização de uso de imagem de quem aparecer.</p>
+  </section>
+
+  <footer>Os vídeos desta página são modelos de demonstração com imagens ilustrativas (Mixkit). Nenhuma imagem é da Galeria dos Pães.</footer>
+</div>

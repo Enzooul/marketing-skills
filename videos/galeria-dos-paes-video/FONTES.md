@@ -18,3 +18,7 @@ Os arquivos ficam fora do Git (são grandes). Para baixar de novo: `https://asse
 | vitrine | 21927 | https://mixkit.co/free-stock-video/baked-goods-in-a-bakery-display-21927/ |
 
 Clipes baixados e não usados na montagem atual: farinha-massa (42464) e leite-vaporizado (3576).
+
+O clipe `doces-assados` (29330) só está disponível em 720p: use `29330-720.mp4` (o endereço `-1080.mp4` responde 403).
+
+A versão 2 (`montar_v2.py`) usa os mesmos clipes, menos `sovando-massa`, `compactando-cafe` e `vitrine`. A análise do v1 e o que mudou estão em `ANALISE.md`.
