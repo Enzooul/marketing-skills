@@ -36,6 +36,7 @@ Antes de qualquer trabalho de marketing num projeto novo, rode `marketing-contex
 | "crescer no X/Twitter", "thread" | `x-twitter-growth` |
 | "LinkedIn" (perfil, post, estratégia, conexões, métricas) | `linkedin-skills` |
 | "YouTube", "roteiro de vídeo", "Reels/Shorts" | `video-content-strategist`; transcrição/busca no YouTube: `youtube-full` |
+| "monta um vídeo com essas fotos/vídeos", "edita um anúncio/reel a partir desse material" (arquivo real de saída) | `ad-video-assembly` |
 | "sequência de e-mails", "e-mail de boas-vindas", "nutrição" | `email-sequence` |
 | "e-mail frio", "prospecção" | `cold-email` |
 | "anúncios", "Google Ads/Meta Ads", "tráfego pago" | `paid-ads`; só os textos/criativos: `ad-creative` |
