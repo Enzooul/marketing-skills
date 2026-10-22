@@ -17,4 +17,4 @@ Os arquivos ficam fora do Git (são grandes). Para baixar de novo: `https://asse
 | cafe-da-manha | 4866 | https://mixkit.co/free-stock-video/breakfast-at-a-table-with-bread-coffee-and-fruit-4866/ |
 | vitrine | 21927 | https://mixkit.co/free-stock-video/baked-goods-in-a-bakery-display-21927/ |
 
-Clipes baixados e não usados na montagem atual: farinha-massa (42464), leite-vaporizado (3576), compactando-cafe/croissant extras.
+Clipes baixados e não usados na montagem atual: farinha-massa (42464) e leite-vaporizado (3576).
