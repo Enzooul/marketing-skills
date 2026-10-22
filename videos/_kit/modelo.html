@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Modelo de anúncio</title>
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Modelo de anúncio vertical (18 s) dirigido por um config.js do cliente.
+// Uso: modelo.html?p=<pasta do cliente, relativa a esta>&v=A|B&t=<segundos>
+const params = new URLSearchParams(location.search);
+const BASE = (params.get('p') || '.') + '/';
+const VERSION = params.get('v') || 'A';
+
+function loadScript(src) { return new Promise((ok, err) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = err; document.head.appendChild(s); }); }
+
+const W = 1080, H = 1920, FPS = 30, DURATION = 18;
+const FONT = '"Inter Display", Inter, sans-serif';
+const ctx = document.getElementById('c').getContext('2d');
+ctx.imageSmoothingQuality = 'high';
+let CFG, C, TEXT, PHOTOS;
+const IMG = {};
+
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = k => 1 - Math.pow(1 - clamp(k), 3);
+const easeInOut = k => { k = clamp(k); return k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
+function load(src) { return new Promise((ok, err) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => err(new Error('foto não encontrada: ' + src)); i.src = BASE + src; }); }
+
+window.READY = loadScript(BASE + 'config.js').then(() => {
+  CFG = window.CONFIG;
+  C = CFG.cores;
+  const v = CFG.versoes[VERSION];
+  TEXT = { ...CFG.textos, gancho: v.gancho };
+  PHOTOS = CFG.fotos;
+  const all = [PHOTOS.gancho, PHOTOS.cena2, PHOTOS.cena3, ...PHOTOS.grade, PHOTOS.destaque, CFG.logo].filter(Boolean);
+  return Promise.all(all.map(s => load(s).then(i => { IMG[s] = i; })));
+}).then(() => document.fonts.ready);
+
+// Draw an image covering the box, with zoom and a focus point (0..1) for the crop.
+function cover(src, x, y, w, h, zoom = 1, fx = 0.5, fy = 0.5) {
+  const im = IMG[src], s = Math.max(w / im.width, h / im.height) * zoom;
+  const dw = im.width * s, dh = im.height * s;
+  ctx.drawImage(im, x - (dw - w) * fx, y - (dh - h) * fy, dw, dh);
+}
+// Full-screen photo. When filling 1080x1920 would blow the photo up too much (landscape or
+// low-res client photos), fill the screen with a blurred copy and show the sharp photo as a band.
+function fullBleed(src, zoom, fy = 0.45, bandY = 820) {
+  const im = IMG[src];
+  if (Math.max(W / im.width, H / im.height) <= 1.6) { cover(src, 0, 0, W, H, zoom, 0.5, fy); return; }
+  ctx.save(); ctx.filter = 'blur(38px) brightness(0.72) saturate(1.15)';
+  cover(src, -60, -60, W + 120, H + 120, 1.1, 0.5, 0.5); ctx.restore();
+  const bw = W * zoom, bh = bw * im.height / im.width;
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 60;
+  ctx.drawImage(im, 540 - bw / 2, bandY - bh / 2, bw, bh); ctx.restore();
+}
+function card(src, cx, cy, w, h, zoom, fx, fy) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(40,25,10,0.28)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
+  ctx.fillStyle = C.fundo; ctx.beginPath(); ctx.roundRect(cx - w / 2, cy - h / 2, w, h, 26); ctx.fill();
+  ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.roundRect(cx - w / 2, cy - h / 2, w, h, 26); ctx.clip();
+  cover(src, cx - w / 2, cy - h / 2, w, h, zoom, fx, fy);
+  ctx.restore();
+}
+function text(str, x, y, size, { weight = 300, color = C.texto, alpha = 1, spacing = 0, shadow = false, rise = 0 } = {}) {
+  if (alpha <= 0 || !str) return;
+  ctx.save(); ctx.globalAlpha *= clamp(alpha);
+  ctx.font = `${weight} ${size}px ${FONT}`; ctx.letterSpacing = `${spacing}px`;
+  // shrink long lines so they never overflow the frame
+  const max = W - 120, wdt = ctx.measureText(str).width;
+  if (wdt > max) { size = size * max / wdt; ctx.font = `${weight} ${size}px ${FONT}`; }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (shadow) { ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 4; }
+  ctx.fillStyle = color; ctx.fillText(str, x, y + rise);
+  ctx.restore();
+}
+function lines(arr, x, y, size, t0, t, opts = {}, gap = 1.15, stagger = 0.25) {
+  arr.forEach((s, i) => {
+    const k = easeOut(prog(t, t0 + i * stagger, t0 + i * stagger + 0.8));
+    text(s, x, y + i * size * gap, size, { ...opts, alpha: k * (opts.alpha ?? 1), rise: (1 - k) * 40 });
+  });
+}
+function riseText(str, y, size, l, a, b, opts = {}) {
+  const k = easeOut(prog(l, a, b));
+  text(str, 540, y, size, { weight: 300, ...opts, alpha: k, rise: (1 - k) * 30 });
+}
+function label(str, y, alpha, color = C.suave) { text((str || '').toUpperCase(), 540, y, 26, { weight: 500, color, alpha, spacing: 9 }); }
+function grain(t) {
+  ctx.save(); ctx.globalAlpha = 0.035; let s = Math.floor(t * FPS) * 9973;
+  for (let i = 0; i < 900; i++) { s = (s * 1664525 + 1013904223) >>> 0; const x = s % W; s = (s * 1664525 + 1013904223) >>> 0; const y = s % H;
+    ctx.fillStyle = i % 2 ? '#000' : '#fff'; ctx.fillRect(x, y, 2, 2); }
+  ctx.restore();
+}
+function brandMark(y, alpha) {
+  // the client's logo when there is one, otherwise the name set in wide capitals
+  if (CFG.logo) {
+    const logo = IMG[CFG.logo], lw = CFG.larguraLogo || 640, lh = lw * logo.height / logo.width;
+    ctx.save(); ctx.globalAlpha *= alpha; ctx.drawImage(logo, 540 - lw / 2, y - lh / 2 + (1 - alpha) * 30, lw, lh); ctx.restore();
+  } else {
+    text(CFG.nome.toUpperCase(), 540, y, 74, { weight: 600, spacing: 10, alpha, rise: (1 - alpha) * 30 });
+  }
+}
+
+/* ---------- scenes: [start, end, draw(localTime)] ---------- */
+const XF = 0.45;
+const SCENES = [
+  [0.0, 2.9, l => { // hook over a full-bleed photo
+    fullBleed(PHOTOS.gancho, lerp(1.14, 1.02, easeOut(l / 2.9)));
+    const g = ctx.createLinearGradient(0, H * 0.45, 0, H); g.addColorStop(0, 'rgba(20,12,6,0)'); g.addColorStop(0.55, 'rgba(20,12,6,0.5)'); g.addColorStop(1, 'rgba(20,12,6,0.72)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    lines(TEXT.gancho, 540, 1330, 116, 0.15, l, { weight: 400, color: '#fff', shadow: true });
+  }],
+  [2.9 - XF, 5.8, l => {
+    ctx.fillStyle = C.fundo; ctx.fillRect(0, 0, W, H);
+    label(CFG.rotulo, 470, easeOut(prog(l, 0.3, 0.9)));
+    riseText(TEXT.cena2, 560, 92, l, 0.4, 1.1);
+    card(PHOTOS.cena2, 540, 1060, 960, 640, lerp(1.0, 1.12, l / 3.4), 0.5, 0.45);
+  }],
+  [5.8 - XF, 8.7, l => {
+    ctx.fillStyle = C.fundo; ctx.fillRect(0, 0, W, H);
+    card(PHOTOS.cena3, 540, 820, 960, 640, lerp(1.12, 1.0, l / 3.4), 0.5, 0.5);
+    riseText(TEXT.cena3, 1290, 92, l, 0.4, 1.1);
+    label(CFG.rotulo, 1400, easeOut(prog(l, 0.6, 1.2)));
+  }],
+  [8.7 - XF, 12.2, l => { // quick sequence in one frame
+    ctx.fillStyle = C.fundo; ctx.fillRect(0, 0, W, H);
+    label(TEXT.rotuloGrade, 430, easeOut(prog(l, 0.2, 0.8)));
+    const n = PHOTOS.grade.length, per = 3.0 / n, i = Math.min(n - 1, Math.floor(Math.max(0, l - 0.3) / per));
+    const within = Math.max(0, l - 0.3) - i * per;
+    if (i > 0 && within < 0.18) card(PHOTOS.grade[i - 1], 540, 960, 820, 820, 1.06, 0.5, 0.45);
+    ctx.save(); ctx.globalAlpha *= i > 0 ? easeOut(within / 0.18) : 1;
+    card(PHOTOS.grade[i], 540, 960, 820, 820, lerp(1.0, 1.06, within / per), 0.5, 0.45);
+    ctx.restore();
+    riseText(TEXT.grade, 1500, 84, l, 0.5, 1.2);
+  }],
+  [12.2 - XF, 15.0, l => {
+    fullBleed(PHOTOS.destaque, lerp(1.02, 1.14, l / 3.2), 0.45, 1060);
+    const g = ctx.createLinearGradient(0, 0, 0, H * 0.5); g.addColorStop(0, 'rgba(20,12,6,0.55)'); g.addColorStop(1, 'rgba(20,12,6,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    riseText(TEXT.destaque, 520, 104, l, 0.5, 1.3, { weight: 400, color: '#fff', shadow: true });
+  }],
+  [15.0 - XF, DURATION, l => { // end card
+    ctx.fillStyle = C.fundo; ctx.fillRect(0, 0, W, H);
+    brandMark(780, easeOut(prog(l, 0.4, 1.4)));
+    label(TEXT.assinatura, 900, easeOut(prog(l, 0.9, 1.6)), C.texto);
+    const kc = easeOut(prog(l, 1.3, 2.0));
+    ctx.save(); ctx.globalAlpha *= kc; ctx.fillStyle = C.destaque;
+    ctx.font = `500 46px ${FONT}`; const tw = Math.min(ctx.measureText(TEXT.cta).width, W - 220);
+    ctx.beginPath(); ctx.roundRect(540 - tw / 2 - 56, 1110 - 52 + (1 - kc) * 20, tw + 112, 104, 52); ctx.fill(); ctx.restore();
+    text(TEXT.cta, 540, 1112 + (1 - kc) * 20, 46, { weight: 500, color: '#fff', alpha: kc });
+    text(TEXT.contato, 540, 1250, 40, { weight: 400, color: C.suave, alpha: easeOut(prog(l, 1.7, 2.3)) });
+    if (CFG.creditos) text(CFG.creditos, 540, 1700, 20, { weight: 400, color: C.suave, alpha: 0.8 * easeOut(prog(l, 1.7, 2.3)) });
+  }],
+];
+
+window.render = function (t) {
+  ctx.clearRect(0, 0, W, H);
+  // dip-to-background transition: the outgoing scene fades into the background color, then the next one fades in
+  for (const [start, end, draw] of SCENES) {
+    if (t < start || t > end) continue;
+    const half = start + XF / 2;
+    if (start > 0 && t < start + XF) {
+      ctx.save(); ctx.globalAlpha = easeInOut(prog(t, start, half)); ctx.fillStyle = C.fundo; ctx.fillRect(0, 0, W, H); ctx.restore();
+    }
+    ctx.save(); ctx.globalAlpha = start === 0 ? 1 : easeInOut(prog(t, half, start + XF));
+    draw(t - start); ctx.restore();
+  }
+  grain(t);
+};
+window.META = { W, H, FPS, DURATION, VERSION };
+window.READY.then(() => window.render(Number(params.get('t') || 1.5)));
+</script>
+</body>
+</html>
