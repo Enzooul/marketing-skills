@@ -107,6 +107,8 @@ tr:last-child td { border-bottom: none; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-size: 0.9rem; z-index: 20; max-width: calc(100% - 32px); }
 .phone { font-variant-numeric: tabular-nums; user-select: all; }
 details summary { cursor: pointer; font-weight: 500; }
+.roteiro { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.rot-out { white-space: pre-wrap; font-family: var(--font-body); margin: 0; font-size: 0.9rem; background: var(--surface-2); padding: 12px; border-radius: 8px; overflow-wrap: anywhere; min-height: 80px; }
 @media (prefers-reduced-motion: no-preference) { .card { transition: border-color .15s; } }
 </style>
 
@@ -272,6 +274,91 @@ details summary { cursor: pointer; font-weight: 500; }
   const DEFAULT_CFG = { meta: 20, fu1: 3, fu2: 4, volta: 30, p1: "3.500", p2: "2.500" };
 
   let db = null, contatos = [], cfg = { ...DEFAULT_CFG }, editId = null, filtro = "todos", busca = "", confirmDel = null;
+  let sampleFn = null, sampleMsg = "Para gerar roteiros, abra esta página no claude.ai com a sua conta.";
+  const gerando = {}, detalhes = {}, rotErro = {};
+
+  // ---------- roteiro grátis (gerado pelo Claude) ----------
+  function promptRoteiro(c, imovelDet) {
+    return [
+      "Você é roteirista de vídeos curtos (Reels, TikTok e YouTube Shorts) para corretores de imóveis no Brasil.",
+      "Escreva, em português do Brasil, um roteiro de AMOSTRA GRÁTIS para enviar pelo WhatsApp a este corretor, que pediu o roteiro.",
+      "",
+      "DADOS DO CORRETOR",
+      "Nome: " + c.nome,
+      "Tipo: " + (c.tipo === "imobiliaria" ? "imobiliária" : "corretor(a) autônomo(a)"),
+      "Trabalha com: " + (c.imovel || "não informado"),
+      "Região: " + (c.bairro || "não informada"),
+      "Padrão de imóveis e observações: " + (c.notas || "não informado"),
+      "Imóvel escolhido para o vídeo: " + (imovelDet || "nenhum específico; crie o roteiro para um imóvel típico do portfólio dele e use marcadores entre colchetes para os dados"),
+      "",
+      "REGRAS",
+      "- Não invente características, metragem, preço, endereço nem condições do imóvel. O que não foi informado vira marcador entre colchetes, como [metragem] ou [preço].",
+      "- Adapte o tom ao padrão: imóveis populares falam de primeiro imóvel, custo-benefício e financiamento; médio padrão, de praticidade e localização; alto padrão, de exclusividade e estilo de vida; imóveis rurais, de terra, estrutura e produção.",
+      "- Use a região real dele quando fizer sentido.",
+      "- Não mencione as observações internas sobre redes sociais, nem como o contato dele foi encontrado.",
+      "- Não prometa vendas, seguidores ou resultados.",
+      "- Formato para WhatsApp: texto simples, negrito com *asteriscos*, sem # e sem tabelas. No máximo 320 palavras.",
+      "",
+      "ESTRUTURA",
+      "1. Uma linha de abertura: \"Oi, " + (c.tipo === "imobiliaria" ? "tudo bem" : primeiroNome(c.nome)) + "! Como combinamos, segue o roteiro:\"",
+      "2. *Título do vídeo* e *Duração*: 30 a 45 segundos, vertical",
+      "3. *Gancho (0 a 3s)*: fala e texto na tela que prendam a atenção",
+      "4. *Cenas* numeradas, com tempo, o que filmar, o que falar e o texto na tela (4 a 6 cenas)",
+      "5. *Chamada final*: convite para chamar no WhatsApp ou no direct",
+      "6. *Legenda pronta*, com 3 a 5 hashtags locais e o marcador [seu CRECI]",
+      "7. *Dicas de gravação no celular*: 3 itens curtos",
+      "8. Fecho de uma linha, sem pressão, oferecendo conversar se ele quiser um mês inteiro de roteiros assim.",
+      "Responda só com o texto, pronto para enviar."
+    ].join("\n");
+  }
+  function erroRoteiro(code) {
+    if (code === "rate_limited") return "Muitos pedidos seguidos ou limite de uso atingido. Espere um pouco e tente de novo.";
+    if (code === "session_expired") return "Sua sessão expirou. Entre de novo no claude.ai e tente outra vez.";
+    if (code === "refused" || code === "empty_completion") return "O roteiro não saiu. Mude a descrição do imóvel e tente de novo.";
+    if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(code)) return "A geração de roteiros não foi autorizada nesta página. Você pode liberar no menu de permissões do artefato.";
+    return "A conexão falhou no meio do caminho. Tente de novo.";
+  }
+  async function gerarRoteiro(c) {
+    if (!sampleFn || gerando[c.id]) return;
+    const ctl = new AbortController();
+    gerando[c.id] = { text: "", ctl }; rotErro[c.id] = null; render();
+    const det = detalhes[c.id] !== undefined ? detalhes[c.id] : (c.roteiroImovel || "");
+    try {
+      const r = await sampleFn(promptRoteiro(c, det), {
+        signal: ctl.signal, cache: false,
+        onText: ({ text }) => { if (gerando[c.id]) gerando[c.id].text = text; document.querySelectorAll('[data-rot-live="' + c.id + '"]').forEach((el) => (el.textContent = text)); }
+      });
+      delete gerando[c.id];
+      const atual = contatos.find((x) => x.id === c.id) || c;
+      await atualizar(atual, { roteiro: r.text + (r.truncated ? "\n\n[O roteiro foi cortado. Gere de novo.]" : ""), roteiroEm: hoje(), roteiroImovel: det });
+    } catch (e) {
+      delete gerando[c.id];
+      const code = e && e.code;
+      if (code !== "cancelled") rotErro[c.id] = erroRoteiro(code);
+      if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(code)) { sampleFn = null; sampleMsg = erroRoteiro(code); }
+    }
+    render();
+  }
+  function blocoRoteiro(c) {
+    let h = '<div class="roteiro"><div class="label">Roteiro grátis de vídeo</div>';
+    if (gerando[c.id]) {
+      return h + '<pre class="rot-out" data-rot-live="' + esc(c.id) + '">' + esc(gerando[c.id].text || "Escrevendo o roteiro… (pode levar até um minuto)") + '</pre><div class="actions"><button class="btn" data-act="rot-parar">Parar</button></div></div>';
+    }
+    if (!sampleFn && !c.roteiro) return h + '<div class="hint">' + esc(sampleMsg) + '</div></div>';
+    const did = "det-" + c.id;
+    const det = detalhes[c.id] !== undefined ? detalhes[c.id] : (c.roteiroImovel || "");
+    if (sampleFn) h += '<div class="field"><label for="' + did + '">Imóvel do vídeo (opcional, quanto mais detalhe melhor)</label><input id="' + did + '" data-det="' + esc(c.id) + '" value="' + esc(det) + '" placeholder="Ex.: apto 3/4, 90 m², varanda gourmet, R$ 650 mil, Pituba"></div>';
+    if (c.roteiro) {
+      h += '<textarea id="rot-' + esc(c.id) + '" style="min-height:280px">' + esc(c.roteiro) + '</textarea>';
+      h += '<div class="hint">Gerado em ' + br(c.roteiroEm) + '. Revise antes de enviar e preencha os campos entre colchetes.</div>';
+      h += '<div class="actions">' + (digitos(c.telefone).length >= 12 ? '<a class="btn primary" target="_blank" rel="noopener" href="#" data-act="rot-wa">Enviar roteiro no WhatsApp</a>' : '') +
+        '<button class="btn" data-act="rot-copiar">Copiar roteiro</button>' + (sampleFn ? '<button class="btn" data-act="rot-gerar">Gerar outro</button>' : '') + '</div>';
+    } else {
+      h += '<div class="actions"><button class="btn primary" data-act="rot-gerar">✨ Gerar roteiro grátis</button></div>';
+    }
+    if (rotErro[c.id]) h += '<div class="notice bad">' + esc(rotErro[c.id]) + '</div>';
+    return h + '</div>';
+  }
   const $ = (id) => document.getElementById(id);
 
   // ---------- datas (fuso do navegador) ----------
@@ -354,6 +441,7 @@ details summary { cursor: pointer; font-weight: 500; }
         '<button class="btn" data-act="copiar">Copiar mensagem</button>' +
         '<button class="btn" data-act="enviado">✓ ' + msg.botao + '</button></div>';
     }
+    if (!parou && (["respondeu", "interessado", "proposta"].includes(c.status) || c.roteiro || gerando[c.id])) h += blocoRoteiro(c);
     h += '<div class="actions">';
     if (!parou && !["fechado"].includes(c.status)) {
       if (!["respondeu", "interessado", "proposta"].includes(c.status)) h += '<button class="btn ghost" data-act="respondeu">Respondeu</button>';
@@ -455,14 +543,19 @@ details summary { cursor: pointer; font-weight: 500; }
     const ch = e.target.closest("[data-filtro]"); if (ch) { filtro = ch.dataset.filtro; render(); return; }
     const b = e.target.closest("[data-act]"); if (!b) return;
     const card = b.closest("[data-id]"); const c = contatos.find((x) => x.id === card.dataset.id); if (!c) return;
-    const ta = card.querySelector("textarea");
+    const ta = card.querySelector('textarea[id^="msg-"]');
+    const rt = card.querySelector('textarea[id^="rot-"]');
     const act = b.dataset.act;
     if (act === "wa") { b.href = "https://wa.me/" + digitos(c.telefone) + "?text=" + encodeURIComponent(ta ? ta.value : ""); return; }
+    if (act === "rot-wa") { b.href = "https://wa.me/" + digitos(c.telefone) + "?text=" + encodeURIComponent(rt ? rt.value : ""); return; }
     e.preventDefault();
     const h = hoje();
+    if (act === "rot-gerar") { gerarRoteiro(c); return; }
+    if (act === "rot-parar") { if (gerando[c.id]) gerando[c.id].ctl.abort(); return; }
+    if (act === "rot-copiar") { copiar(rt ? rt.value : "", rt); return; }
     if (act === "copiar") copiar(ta ? ta.value : "", ta);
     else if (act === "enviado") marcarEnviado(c);
-    else if (act === "respondeu") atualizar(c, { status: "respondeu", respondeuEm: c.respondeuEm || h, proxima: h });
+    else if (act === "respondeu") { atualizar(c, { status: "respondeu", respondeuEm: c.respondeuEm || h, proxima: h }); if (sampleFn) setTimeout(() => toast("Se pediu o roteiro, gere no cartão em Hoje → Respostas"), 2700); }
     else if (act === "interessado") atualizar(c, { status: "interessado", interessadoEm: h, proxima: h });
     else if (act === "proposta") atualizar(c, { status: "proposta", propostaEm: h, proxima: addDias(2) });
     else if (act === "fechado") atualizar(c, { status: "fechado", fechadoEm: h, proxima: null });
@@ -475,6 +568,7 @@ details summary { cursor: pointer; font-weight: 500; }
   });
 
   $("busca").addEventListener("input", (e) => { busca = e.target.value; render(); });
+  document.addEventListener("input", (e) => { const id = e.target && e.target.dataset && e.target.dataset.det; if (id) detalhes[id] = e.target.value; });
 
   function preencherSelects() {
     const opts = TEMPLATES.map((t) => '<option value="' + t.id + '">' + esc(t.nome) + '</option>').join("");
@@ -550,8 +644,13 @@ details summary { cursor: pointer; font-weight: 500; }
   try { const a = localStorage.getItem("aba"); if (a && $("view-" + a)) abrirAba(a); } catch (e) {}
   render();
 
+  (async function ligarRoteiro() {
+    try { sampleFn = window.claude && window.claude.use ? await window.claude.use("sample") : null; } catch (e) { sampleFn = null; }
+    render();
+  })();
+
   (async function conectar() {
-    db = window.claude && window.claude.use ? await window.claude.use("db") : null;
+    db =window.claude && window.claude.use ? await window.claude.use("db") : null;
     if (!db) { note("Não consegui acessar seus dados. Abra esta página no claude.ai, com a sua conta, para ver e salvar os contatos.", "bad"); return; }
     const timer = setTimeout(() => note("Os dados estão demorando para carregar. Confira a sua conexão; a página continua tentando.", "warn"), 10000);
     db.collection("contatos").onSnapshot((snap) => {
