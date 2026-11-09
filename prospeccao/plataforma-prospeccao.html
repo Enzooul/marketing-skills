@@ -256,6 +256,18 @@ details summary { cursor: pointer; font-weight: 500; }
   const RESPOSTAS = [
     { id: "como", nome: "Quando perguntar \"como funciona?\"", texto:
 "Que bom! Funciona assim:\n\n🎥 Eu crio os roteiros dos vídeos curtos (você só grava, com o texto pronto)\n🖼️ Monto as artes dos seus imóveis com a sua identidade visual\n📅 Deixo tudo agendado no Instagram, Facebook, TikTok, YouTube, Pinterest e no seu Perfil do Google\n💬 Configuro respostas automáticas no direct que levam o interessado direto para o seu WhatsApp\n\nTem duas formas de trabalhar:\n*1. Implantação + treinamento:* eu monto tudo e te ensino a fazer sozinho, com Inteligência Artificial.\n*2. Gestão mensal:* eu cuido de tudo todo mês e você só aprova e grava.\n\nQual das duas combina mais com a sua rotina? Aí te mando os detalhes e valores." },
+    { id: "conversa", nome: "Depois que ele gostar do roteiro: marcar a conversa", texto:
+"Que bom que gostou! 😊 Esse roteiro é só uma amostra. Na prática, eu monto o mês inteiro para você: roteiros de todos os seus imóveis, edição dos vídeos com IA (cortes, legendas e narração), artes, publicação automática em todas as redes e respostas automáticas no direct levando o cliente direto para o seu WhatsApp. Todo mês você recebe um relatório mostrando o que funcionou.\n\nVocê só aprova e grava uns vídeos curtos pelo celular.\n\nPosso te mostrar em 15 minutos como ficaria o seu perfil? Fica melhor [dia] de manhã ou [dia] à tarde?" },
+    { id: "caro", nome: "Objeção: \"achei caro\"", texto:
+"Entendo, {nome}. Uma forma de olhar: quanto vale para você uma venda a mais? Se as redes trouxerem um único cliente novo no ano, a comissão dele já costuma pagar o investimento.\n\nE se fizer mais sentido agora, dá para começar menor: só Instagram e Google, e a gente amplia quando os resultados aparecerem. Quer que eu te mande essa opção?" },
+    { id: "tempo", nome: "Objeção: \"não tenho tempo\"", texto:
+"É exatamente por isso que o serviço existe, {nome}. 🙂 Você não precisa pensar no que postar nem editar nada: recebe o roteiro pronto, grava 2 ou 3 vídeos curtos por semana no celular (uns 20 minutos) e aprova. A edição, a publicação e as respostas automáticas ficam comigo." },
+    { id: "video", nome: "Objeção: \"não gosto de aparecer em vídeo\"", texto:
+"Sem problema, muita gente começa assim! Dá para fazer vídeos só com imagens do imóvel, narração e legendas, sem você aparecer. Com o tempo, se quiser, a gente inclui vídeos curtos seus, porque é o que mais gera confiança. Você decide o ritmo." },
+    { id: "ia", nome: "Objeção: \"vídeo com IA não parece falso?\"", texto:
+"Ótima pergunta. A IA entra nos bastidores: ajuda a escrever os roteiros, cortar, legendar e narrar os vídeos. O imóvel aparece sempre como ele é, nas suas gravações e fotos. Nada é alterado para enganar o cliente, até porque a sua credibilidade é o que vende." },
+    { id: "pensar", nome: "Objeção: \"vou pensar\"", texto:
+"Claro, {nome}, fique à vontade! Para te ajudar a decidir: tem alguma dúvida sobre como funcionaria no seu dia a dia, ou é mais uma questão de investimento? Assim eu te mando exatamente o que precisar." },
     { id: "preco", nome: "Quando perguntar \"quanto custa?\"", texto:
 "Depende de quantas redes e de qual formato você prefere, mas para você ter uma ideia: a implantação com treinamento sai a partir de R$ {p1} (pagamento único), e a gestão mensal a partir de R$ {p2}/mês.\n\nPara eu te passar o valor certinho, me conta: você já posta com frequência hoje, ou está começando do zero?" }
   ];
@@ -281,7 +293,7 @@ details summary { cursor: pointer; font-weight: 500; }
   function promptRoteiro(c, imovelDet) {
     return [
       "Você é roteirista de vídeos curtos (Reels, TikTok e YouTube Shorts) para corretores de imóveis no Brasil.",
-      "Escreva, em português do Brasil, um roteiro de AMOSTRA GRÁTIS para enviar pelo WhatsApp a este corretor, que pediu o roteiro.",
+      "Escreva, em português do Brasil, uma mensagem de WhatsApp para este corretor, que pediu um roteiro grátis. O objetivo não é só entregar o roteiro: é mostrar que o roteiro é UMA peça de um serviço completo de redes sociais com IA, e levar o corretor a aceitar uma conversa de 15 minutos.",
       "",
       "DADOS DO CORRETOR",
       "Nome: " + c.nome,
@@ -297,17 +309,15 @@ details summary { cursor: pointer; font-weight: 500; }
       "- Use a região real dele quando fizer sentido.",
       "- Não mencione as observações internas sobre redes sociais, nem como o contato dele foi encontrado.",
       "- Não prometa vendas, seguidores ou resultados.",
-      "- Formato para WhatsApp: texto simples, negrito com *asteriscos*, sem # e sem tabelas. No máximo 320 palavras.",
+      "- Só cite recursos desta lista: roteiros mensais para todos os imóveis; edição dos vídeos com IA (cortes, legendas, narração e música) a partir do que o corretor grava no celular; artes dos imóveis com a identidade visual dele; publicação agendada no Instagram, Facebook, TikTok, YouTube, Pinterest e Perfil da Empresa no Google; respostas automáticas no direct levando o interessado ao WhatsApp; relatório mensal de desempenho. Não cite nada além disso.",
+      "- Formato para WhatsApp: texto simples, negrito com *asteriscos*, sem # e sem tabelas. No máximo 380 palavras.",
       "",
       "ESTRUTURA",
-      "1. Uma linha de abertura: \"Oi, " + (c.tipo === "imobiliaria" ? "tudo bem" : primeiroNome(c.nome)) + "! Como combinamos, segue o roteiro:\"",
-      "2. *Título do vídeo* e *Duração*: 30 a 45 segundos, vertical",
-      "3. *Gancho (0 a 3s)*: fala e texto na tela que prendam a atenção",
-      "4. *Cenas* numeradas, com tempo, o que filmar, o que falar e o texto na tela (4 a 6 cenas)",
-      "5. *Chamada final*: convite para chamar no WhatsApp ou no direct",
-      "6. *Legenda pronta*, com 3 a 5 hashtags locais e o marcador [seu CRECI]",
-      "7. *Dicas de gravação no celular*: 3 itens curtos",
-      "8. Fecho de uma linha, sem pressão, oferecendo conversar se ele quiser um mês inteiro de roteiros assim.",
+      "1. Abertura de uma linha: \"Oi, " + (c.tipo === "imobiliaria" ? "tudo bem" : primeiroNome(c.nome)) + "! Como combinamos, preparei um roteiro pensado para o seu perfil:\"",
+      "2. O roteiro, enxuto: *Título*, *Duração* (30 a 40 segundos, vertical), *Gancho (0 a 3s)* com fala e texto na tela, 3 ou 4 *cenas* curtas (o que filmar e o que falar) e a *chamada final*.",
+      "3. Bloco *Isso é só 1 peça do que eu monto para você*: de 4 a 5 itens curtos da lista de recursos acima, escritos como benefício para a rotina dele (tempo economizado, constância, mais conversas no WhatsApp).",
+      "4. Bloco *Uma prévia da sua primeira semana*: 3 ideias de posts com título, adaptadas ao padrão e à região dele (por exemplo: um imóvel, uma dica para quem compra ou aluga, um conteúdo sobre o bairro).",
+      "5. Fecho com convite claro e fácil: uma conversa de 15 minutos para mostrar como ficaria o perfil dele, terminando com uma pergunta de duas opções: \"Fica melhor [dia] de manhã ou [dia] à tarde?\"",
       "Responda só com o texto, pronto para enviar."
     ].join("\n");
   }
