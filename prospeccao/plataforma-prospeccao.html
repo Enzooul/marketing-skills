@@ -1,0 +1,565 @@
+<title>Prospecção de Corretores</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: ferramenta de trabalho diário — barra de abas no topo, coluna única de cartões de contato, painel lateral só no desktop */
+:root {
+  --bg: #f5f6f4;
+  --surface: #ffffff;
+  --surface-2: #eef1ee;
+  --fg: #18201c;
+  --muted: #5b6760;
+  --line: #d9dfda;
+  --accent: #1f6f52;
+  --accent-fg: #ffffff;
+  --accent-soft: #dcefe6;
+  --warn: #9a5b00;
+  --warn-soft: #fbeed6;
+  --bad: #a83232;
+  --bad-soft: #f8e1e1;
+  --ok: #1f6f52;
+  --ok-soft: #dcefe6;
+  --info: #2d5a8c;
+  --info-soft: #e1eaf6;
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111613; --surface: #19201c; --surface-2: #212a25; --fg: #e6ece8; --muted: #9aa8a0; --line: #2e3933;
+    --accent: #5cc49a; --accent-fg: #0d1a14; --accent-soft: #1c3a2e;
+    --warn: #f0b25a; --warn-soft: #3a2c14; --bad: #f08a8a; --bad-soft: #3d1e1e;
+    --ok: #5cc49a; --ok-soft: #1c3a2e; --info: #8fb6e6; --info-soft: #1d2b3d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111613; --surface: #19201c; --surface-2: #212a25; --fg: #e6ece8; --muted: #9aa8a0; --line: #2e3933;
+  --accent: #5cc49a; --accent-fg: #0d1a14; --accent-soft: #1c3a2e;
+  --warn: #f0b25a; --warn-soft: #3a2c14; --bad: #f08a8a; --bad-soft: #3d1e1e;
+  --ok: #5cc49a; --ok-soft: #1c3a2e; --info: #8fb6e6; --info-soft: #1d2b3d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 20px 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 18px; }
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-size: 1.15rem; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--font-display); font-size: 1rem; margin: 0; }
+.sub { color: var(--muted); margin: 2px 0 0; font-size: 0.9rem; }
+.quota { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 12px; }
+.quota .num { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.bar { width: 120px; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.bar > span { display: block; height: 100%; background: var(--accent); }
+.label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+nav.tabs button { background: none; border: none; border-bottom: 2px solid transparent; padding: 8px 12px; font: inherit; font-weight: 500; color: var(--muted); cursor: pointer; }
+nav.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+nav.tabs .count { font-variant-numeric: tabular-nums; background: var(--surface-2); border-radius: 99px; padding: 0 7px; margin-left: 4px; font-size: 0.8rem; }
+section.view { display: flex; flex-direction: column; gap: 16px; }
+.group { display: flex; flex-direction: column; gap: 10px; }
+.group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+.who { min-width: 0; }
+.who strong { font-size: 1rem; }
+.meta { color: var(--muted); font-size: 0.85rem; overflow-wrap: anywhere; }
+.pill { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: var(--surface-2); color: var(--muted); white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.info { background: var(--info-soft); color: var(--info); }
+textarea, input, select { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+textarea { resize: vertical; min-height: 120px; line-height: 1.45; }
+textarea:focus, input:focus, select:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn { font: inherit; font-size: 0.88rem; font-weight: 500; border-radius: 8px; padding: 7px 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.danger { color: var(--bad); }
+.btn.ghost { border-color: transparent; background: none; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field label { font-size: 0.85rem; font-weight: 500; }
+.hint { color: var(--muted); font-size: 0.82rem; }
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); padding: 18px; color: var(--muted); }
+.notice { border-radius: var(--radius); padding: 10px 14px; font-size: 0.9rem; }
+.notice.warn { background: var(--warn-soft); color: var(--warn); }
+.notice.bad { background: var(--bad-soft); color: var(--bad); }
+.notice.info { background: var(--info-soft); color: var(--info); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { font: inherit; font-size: 0.82rem; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 99px; padding: 4px 11px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+td.n { font-variant-numeric: tabular-nums; text-align: right; }
+th.n { text-align: right; }
+tr:last-child td { border-bottom: none; }
+.tpl { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.tpl pre { white-space: pre-wrap; font-family: var(--font-body); margin: 0; font-size: 0.9rem; background: var(--surface-2); padding: 10px; border-radius: 8px; overflow-wrap: anywhere; }
+.confirm { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 0.85rem; color: var(--bad); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-size: 0.9rem; z-index: 20; max-width: calc(100% - 32px); }
+.phone { font-variant-numeric: tabular-nums; user-select: all; }
+details summary { cursor: pointer; font-weight: 500; }
+@media (prefers-reduced-motion: no-preference) { .card { transition: border-color .15s; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Prospecção de Corretores</h1>
+      <p class="sub">Mensagens personalizadas, envio pelo WhatsApp e follow-ups no dia certo.</p>
+    </div>
+    <div class="quota" aria-live="polite">
+      <div>
+        <div class="label">Mensagens enviadas hoje</div>
+        <div><span class="num" id="q-num">0</span> <span class="meta">de <span id="q-meta">20</span></span></div>
+      </div>
+      <div class="bar" aria-hidden="true"><span id="q-bar" style="width:0%"></span></div>
+    </div>
+  </header>
+
+  <div id="status-note" class="notice info">Carregando seus contatos…</div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="hoje" aria-selected="true" id="tab-hoje">Hoje <span class="count" id="c-hoje">0</span></button>
+    <button role="tab" data-tab="contatos" aria-selected="false" id="tab-contatos">Contatos <span class="count" id="c-contatos">0</span></button>
+    <button role="tab" data-tab="novo" aria-selected="false" id="tab-novo">Adicionar</button>
+    <button role="tab" data-tab="mensagens" aria-selected="false" id="tab-mensagens">Mensagens</button>
+    <button role="tab" data-tab="resultados" aria-selected="false" id="tab-resultados">Resultados</button>
+    <button role="tab" data-tab="ajustes" aria-selected="false" id="tab-ajustes">Ajustes</button>
+  </nav>
+
+  <!-- HOJE -->
+  <section class="view" id="view-hoje">
+    <div class="group">
+      <div class="group-head"><h2>Follow-ups para hoje</h2><span class="hint">Quem não respondeu e já passou do prazo</span></div>
+      <div id="list-fu" class="group"></div>
+    </div>
+    <div class="group">
+      <div class="group-head"><h2>Respostas para dar andamento</h2><span class="hint">Quem respondeu e espera o seu próximo passo</span></div>
+      <div id="list-resp" class="group"></div>
+    </div>
+    <div class="group">
+      <div class="group-head"><h2>Novos contatos para enviar</h2><span class="hint" id="novos-hint"></span></div>
+      <div id="list-novos" class="group"></div>
+    </div>
+  </section>
+
+  <!-- CONTATOS -->
+  <section class="view" id="view-contatos" hidden>
+    <div class="filters">
+      <input id="busca" type="search" placeholder="Buscar por nome, bairro ou telefone" style="max-width:320px">
+    </div>
+    <div class="filters" id="chips"></div>
+    <div id="list-todos" class="group"></div>
+  </section>
+
+  <!-- NOVO / EDITAR -->
+  <section class="view" id="view-novo" hidden>
+    <form id="form" class="card" autocomplete="off">
+      <div class="card-head"><h2 id="form-title">Novo contato</h2><button type="button" class="btn ghost" id="form-cancel" hidden>Cancelar edição</button></div>
+      <div class="grid">
+        <div class="field"><label for="f-nome">Nome *</label><input id="f-nome" required placeholder="Ex.: Mariana Souza"></div>
+        <div class="field"><label for="f-tel">WhatsApp *</label><input id="f-tel" required inputmode="tel" placeholder="(11) 98765-4321"></div>
+        <div class="field"><label for="f-tipo">Tipo</label>
+          <select id="f-tipo"><option value="corretor">Corretor(a)</option><option value="imobiliaria">Imobiliária</option></select></div>
+        <div class="field"><label for="f-tpl">Mensagem de abertura</label><select id="f-tpl"></select></div>
+        <div class="field"><label for="f-imovel">Imóvel que viu</label><input id="f-imovel" placeholder="Ex.: apartamento de 3 quartos"></div>
+        <div class="field"><label for="f-bairro">Bairro</label><input id="f-bairro" placeholder="Ex.: Pituba"></div>
+        <div class="field"><label for="f-fonte">Onde achou o número *</label><input id="f-fonte" required list="fontes" placeholder="Ex.: ZAP Imóveis"></div>
+        <div class="field"><label for="f-indicador">Quem indicou</label><input id="f-indicador" placeholder="Só para indicação"></div>
+      </div>
+      <div class="field"><label for="f-notas">Anotações</label><textarea id="f-notas" style="min-height:60px" placeholder="Ex.: posta muito vídeo, trabalha com alto padrão"></textarea></div>
+      <datalist id="fontes"><option value="ZAP Imóveis"><option value="VivaReal"><option value="OLX"><option value="Site da imobiliária"><option value="Google Maps"><option value="Instagram (bio)"><option value="Indicação"></datalist>
+      <div id="form-status-row" class="field" hidden><label for="f-status">Situação</label><select id="f-status"></select></div>
+      <p class="hint">Use só números que o corretor divulga para negócios e anote de onde veio. Isso protege você na LGPD.</p>
+      <div class="actions"><button class="btn primary" type="submit" id="form-save">Salvar contato</button></div>
+    </form>
+
+    <details class="card">
+      <summary>Adicionar vários de uma vez</summary>
+      <p class="hint">Um contato por linha, separado por ponto e vírgula: <b>nome; telefone; imóvel; bairro; onde achou</b></p>
+      <textarea id="bulk" placeholder="Mariana Souza; 71 98888-7777; casa com piscina; Itapuã; OLX"></textarea>
+      <div class="field" style="max-width:320px"><label for="bulk-tpl">Mensagem de abertura para todos</label><select id="bulk-tpl"></select></div>
+      <div class="actions"><button class="btn primary" type="button" id="bulk-go">Importar lista</button></div>
+    </details>
+  </section>
+
+  <!-- MENSAGENS -->
+  <section class="view" id="view-mensagens" hidden>
+    <p class="hint">Estas são as mensagens que a plataforma usa. Os campos entre chaves, como {nome} e {imovel}, são trocados pelos dados de cada contato. Em cada cartão você ainda pode editar o texto antes de enviar.</p>
+    <div id="tpl-list" class="group"></div>
+  </section>
+
+  <!-- RESULTADOS -->
+  <section class="view" id="view-resultados" hidden>
+    <div class="group">
+      <h2>Funil</h2>
+      <div class="table-wrap"><table id="funil"></table></div>
+    </div>
+    <div class="group">
+      <h2>Qual mensagem de abertura funciona melhor</h2>
+      <div class="table-wrap"><table id="por-tpl"></table></div>
+      <p class="hint">Com menos de 30 envios por mensagem, a diferença ainda pode ser sorte. Compare depois de juntar mais contatos.</p>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section class="view" id="view-ajustes" hidden>
+    <form id="cfg" class="card">
+      <h2>Ajustes</h2>
+      <div class="grid">
+        <div class="field"><label for="c-meta">Meta de mensagens por dia</label><input id="c-meta" type="number" min="1" max="100"></div>
+        <div class="field"><label for="c-fu1">Dias até o 1º follow-up</label><input id="c-fu1" type="number" min="1" max="30"></div>
+        <div class="field"><label for="c-fu2">Dias até o último follow-up</label><input id="c-fu2" type="number" min="1" max="30"></div>
+        <div class="field"><label for="c-volta">Dias para tentar de novo depois</label><input id="c-volta" type="number" min="7" max="180"></div>
+        <div class="field"><label for="c-p1">Preço implantação + treinamento (R$)</label><input id="c-p1" placeholder="3.500"></div>
+        <div class="field"><label for="c-p2">Preço mensal (R$/mês)</label><input id="c-p2" placeholder="2.500"></div>
+      </div>
+      <p class="hint">Não sei o limite seguro de mensagens por dia no WhatsApp, porque eles não divulgam. Comece com 15 a 20.</p>
+      <div class="actions"><button class="btn primary" type="submit">Salvar ajustes</button></div>
+    </form>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  const TEMPLATES = [
+    { id: "anuncio", nome: "A partir de um anúncio", texto:
+"Oi, {nome}! Tudo bem? Vi seu anúncio do {imovel} em {bairro} no {fonte}.\n\nEu ajudo corretores a divulgar os imóveis nas redes sociais sem perder tempo: crio roteiros de vídeos curtos, artes e deixo tudo agendado no Instagram, TikTok, YouTube e Google, sem anúncio pago.\n\nPosso te mandar um roteiro de vídeo para esse imóvel, sem compromisso?\n\n(Se não tiver interesse, é só me avisar que não te mando mais mensagens.)" },
+    { id: "amostra", nome: "Amostra grátis", texto:
+"Oi, {nome}! Tudo bem? Vi o seu anúncio do {imovel} em {bairro} e tive uma ideia de vídeo curto para ele que costuma prender bem a atenção no Reels e no TikTok.\n\nTrabalho criando roteiros e automatizando as redes de corretores, de forma orgânica, sem anúncio pago. Se quiser, te mando o roteiro pronto, sem compromisso. Posso mandar?\n\n(Se não tiver interesse, é só me avisar que não te mando mais mensagens.)" },
+    { id: "perfil", nome: "Viu o perfil dele", texto:
+"Oi, {nome}! Tudo bem? Vi seu perfil e gostei muito do {imovel} em {bairro}. 👏\n\nEu ajudo corretores a manter as redes ativas sem perder horas do dia: a gente cria os roteiros de vídeos curtos, as artes dos imóveis e deixa tudo agendado no Instagram, TikTok, YouTube e Google, sem precisar pagar anúncio. Você só aprova e grava.\n\nPosso te mostrar em 2 minutos como funcionaria no seu perfil?" },
+    { id: "indicacao", nome: "Por indicação", texto:
+"Oi, {nome}! Tudo bem? O {indicador} me passou seu contato e disse que você poderia se interessar.\n\nEu estruturo as redes sociais de corretores: roteiros de vídeos, artes dos imóveis, agendamento automático em todas as redes e respostas automáticas no direct levando o cliente para o seu WhatsApp. Tudo orgânico, sem anúncio.\n\nFaz sentido eu te explicar rapidinho como funciona?" },
+    { id: "imob", nome: "Para imobiliária", texto:
+"Olá! Tudo bem? Falo com o responsável pela {nome}?\n\nEu estruturo as redes sociais de corretores e imobiliárias: roteiros de vídeos curtos, artes dos imóveis, agendamento em todas as redes e respostas automáticas levando o cliente para o WhatsApp. Tudo orgânico, sem anúncio.\n\nPosso te mostrar um exemplo com um dos imóveis de vocês?\n\n(Se não tiver interesse, é só me avisar que não te mando mais mensagens.)" }
+  ];
+  const FOLLOW = {
+    fu1: "Oi, {nome}! Só passando para não deixar minha mensagem se perder. Se quiser, te mando um exemplo de roteiro de vídeo para um dos seus imóveis, sem compromisso. 😊",
+    fu2: "Oi, {nome}! Imagino que a rotina esteja corrida. Vou deixar meu contato aqui: quando quiser deixar as redes rodando sem perder tempo, é só me chamar. Sucesso nas vendas! 🤝",
+    volta: "Oi, {nome}! Tudo bem? Lembrei de você: tenho uma ideia de vídeo curto que tem funcionado bem para corretores. Quer que eu te mande?"
+  };
+  const RESPOSTAS = [
+    { id: "como", nome: "Quando perguntar \"como funciona?\"", texto:
+"Que bom! Funciona assim:\n\n🎥 Eu crio os roteiros dos vídeos curtos (você só grava, com o texto pronto)\n🖼️ Monto as artes dos seus imóveis com a sua identidade visual\n📅 Deixo tudo agendado no Instagram, Facebook, TikTok, YouTube, Pinterest e no seu Perfil do Google\n💬 Configuro respostas automáticas no direct que levam o interessado direto para o seu WhatsApp\n\nTem duas formas de trabalhar:\n*1. Implantação + treinamento:* eu monto tudo e te ensino a fazer sozinho, com Inteligência Artificial.\n*2. Gestão mensal:* eu cuido de tudo todo mês e você só aprova e grava.\n\nQual das duas combina mais com a sua rotina? Aí te mando os detalhes e valores." },
+    { id: "preco", nome: "Quando perguntar \"quanto custa?\"", texto:
+"Depende de quantas redes e de qual formato você prefere, mas para você ter uma ideia: a implantação com treinamento sai a partir de R$ {p1} (pagamento único), e a gestão mensal a partir de R$ {p2}/mês.\n\nPara eu te passar o valor certinho, me conta: você já posta com frequência hoje, ou está começando do zero?" }
+  ];
+  const STATUS = {
+    a_enviar: { t: "A enviar", c: "" },
+    enviado: { t: "1º contato enviado", c: "info" },
+    fu1: { t: "Follow-up 1 enviado", c: "info" },
+    fu2: { t: "Follow-up 2 enviado", c: "info" },
+    respondeu: { t: "Respondeu", c: "ok" },
+    interessado: { t: "Interessado", c: "ok" },
+    proposta: { t: "Proposta enviada", c: "warn" },
+    fechado: { t: "Fechou", c: "ok" },
+    sem_interesse: { t: "Sem interesse", c: "bad" },
+    parar: { t: "Pediu para parar", c: "bad" }
+  };
+  const DEFAULT_CFG = { meta: 20, fu1: 3, fu2: 4, volta: 30, p1: "3.500", p2: "2.500" };
+
+  let db = null, contatos = [], cfg = { ...DEFAULT_CFG }, editId = null, filtro = "todos", busca = "", confirmDel = null;
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- datas (fuso do navegador) ----------
+  function hoje() { const d = new Date(); return ymd(d); }
+  function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function addDias(n) { const d = new Date(); d.setDate(d.getDate() + Number(n)); return ymd(d); }
+  function br(s) { if (!s) return "—"; const [y, m, d] = s.split("-"); return d + "/" + m + "/" + y; }
+
+  // ---------- util ----------
+  function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+  function primeiroNome(n) { return String(n || "").trim().split(/\s+/)[0] || ""; }
+  function digitos(tel) { let d = String(tel || "").replace(/\D/g, ""); if (d.length === 10 || d.length === 11) d = "55" + d; return d; }
+  function fill(tpl, c) {
+    const v = {
+      nome: c.tipo === "imobiliaria" ? (c.nome || "") : primeiroNome(c.nome),
+      imovel: c.imovel, bairro: c.bairro, fonte: c.fonte, indicador: c.indicador, p1: cfg.p1, p2: cfg.p2
+    };
+    return tpl.replace(/\{(\w+)\}/g, (m, k) => (v[k] && String(v[k]).trim()) ? String(v[k]).trim() : "[" + k + "]");
+  }
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 2600); }
+  async function copiar(texto, el) {
+    try { await navigator.clipboard.writeText(texto); toast("Mensagem copiada"); }
+    catch (e) { if (el) { el.focus(); el.select(); } toast("Não deu para copiar sozinho: o texto foi selecionado, use Ctrl+C"); }
+  }
+  function note(msg, kind) { const n = $("status-note"); if (!msg) { n.hidden = true; return; } n.hidden = false; n.className = "notice " + (kind || "info"); n.textContent = msg; }
+  function tplById(id) { return TEMPLATES.find((t) => t.id === id) || TEMPLATES[0]; }
+
+  // Qual mensagem mandar agora, conforme a situação
+  function proximaMensagem(c) {
+    if (c.status === "a_enviar") return { tipo: "abertura", texto: fill(tplById(c.tpl).texto, c), botao: "Enviei o 1º contato" };
+    if (c.status === "enviado") return { tipo: "fu1", texto: fill(FOLLOW.fu1, c), botao: "Enviei o follow-up 1" };
+    if (c.status === "fu1") return { tipo: "fu2", texto: fill(FOLLOW.fu2, c), botao: "Enviei o último follow-up" };
+    if (c.status === "fu2") return { tipo: "volta", texto: fill(FOLLOW.volta, c), botao: "Enviei a nova tentativa" };
+    return null;
+  }
+
+  // ---------- gravação ----------
+  async function salvar(id, dados) {
+    if (!db) { toast("Sem conexão com os dados: abra a página no claude.ai com a sua conta"); return false; }
+    try { await db.collection("contatos").doc(id).set(dados); return true; }
+    catch (e) { toast(e && e.code === "quota_exceeded" ? "Limite de contatos atingido: apague contatos antigos" : "Não consegui salvar. Tente de novo em instantes."); return false; }
+  }
+  async function atualizar(c, mudancas) { const novo = { ...c, ...mudancas, atualizadoEm: new Date().toISOString() }; delete novo.id; const ok = await salvar(c.id, novo); if (ok) toast("Salvo"); return ok; }
+
+  async function marcarEnviado(c) {
+    const h = hoje();
+    const envios = Array.isArray(c.envios) ? c.envios.slice() : [];
+    envios.push(h);
+    if (c.status === "a_enviar") return atualizar(c, { status: "enviado", enviadoEm: h, proxima: addDias(cfg.fu1), envios });
+    if (c.status === "enviado") return atualizar(c, { status: "fu1", fu1Em: h, proxima: addDias(cfg.fu2), envios });
+    if (c.status === "fu1") return atualizar(c, { status: "fu2", fu2Em: h, proxima: addDias(cfg.volta), envios });
+    if (c.status === "fu2") return atualizar(c, { status: "fu2", voltaEm: h, proxima: addDias(cfg.volta), envios });
+  }
+
+  // ---------- cartões ----------
+  function cartao(c, opts) {
+    const st = STATUS[c.status] || STATUS.a_enviar;
+    const msg = opts && opts.semMensagem ? null : proximaMensagem(c);
+    const parou = c.status === "parar";
+    const atrasado = c.proxima && c.proxima < hoje() && ["enviado", "fu1", "fu2", "respondeu", "interessado", "proposta"].includes(c.status);
+    const tel = digitos(c.telefone);
+    let h = '<article class="card" data-id="' + esc(c.id) + '">';
+    h += '<div class="card-head"><div class="who"><strong>' + esc(c.nome) + '</strong>' + (c.exemplo ? ' <span class="pill warn">EXEMPLO</span>' : '') +
+      '<div class="meta"><span class="phone">' + esc(c.telefone) + '</span> · ' + esc(c.tipo === "imobiliaria" ? "Imobiliária" : "Corretor(a)") +
+      (c.bairro ? ' · ' + esc(c.bairro) : '') + (c.fonte ? ' · via ' + esc(c.fonte) : '') + '</div>' +
+      (c.imovel ? '<div class="meta">Imóvel: ' + esc(c.imovel) + '</div>' : '') +
+      (c.notas ? '<div class="meta">Nota: ' + esc(c.notas) + '</div>' : '') +
+      '</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="pill ' + st.c + '">' + st.t + '</span>' +
+      (c.proxima && !["a_enviar", "fechado", "sem_interesse", "parar"].includes(c.status) ? '<span class="meta">Próximo passo: ' + br(c.proxima) + (atrasado ? ' <span class="pill warn">atrasado</span>' : '') + '</span>' : '') +
+      '</div></div>';
+    if (parou) {
+      h += '<div class="notice bad">Esta pessoa pediu para não receber mais mensagens. Não envie de novo.</div>';
+    } else if (msg) {
+      const tid = "msg-" + c.id;
+      h += '<div class="field"><label for="' + tid + '" class="label">' + (msg.tipo === "abertura" ? "Mensagem de abertura (" + esc(tplById(c.tpl).nome) + ")" : msg.tipo === "fu1" ? "1º follow-up" : msg.tipo === "fu2" ? "Último follow-up" : "Nova tentativa") + ' · edite se quiser</label>' +
+        '<textarea id="' + tid + '">' + esc(msg.texto) + '</textarea></div>';
+      if (/\[\w+\]/.test(msg.texto)) h += '<div class="hint">Os campos entre colchetes ficaram sem dado: complete no texto antes de enviar, ou edite o contato.</div>';
+      h += '<div class="actions">' +
+        (tel.length >= 12 ? '<a class="btn primary" target="_blank" rel="noopener" href="#" data-act="wa">Abrir no WhatsApp</a>' : '<span class="pill bad">Telefone incompleto</span>') +
+        '<button class="btn" data-act="copiar">Copiar mensagem</button>' +
+        '<button class="btn" data-act="enviado">✓ ' + msg.botao + '</button></div>';
+    }
+    h += '<div class="actions">';
+    if (!parou && !["fechado"].includes(c.status)) {
+      if (!["respondeu", "interessado", "proposta"].includes(c.status)) h += '<button class="btn ghost" data-act="respondeu">Respondeu</button>';
+      if (["respondeu"].includes(c.status)) h += '<button class="btn ghost" data-act="interessado">Interessado</button>';
+      if (["respondeu", "interessado"].includes(c.status)) h += '<button class="btn ghost" data-act="proposta">Mandei proposta</button>';
+      if (["interessado", "proposta"].includes(c.status)) h += '<button class="btn ghost" data-act="fechado">Fechou 🎉</button>';
+      h += '<button class="btn ghost" data-act="sem_interesse">Sem interesse</button>';
+      h += '<button class="btn ghost" data-act="parar">Pediu para parar</button>';
+    }
+    h += '<button class="btn ghost" data-act="editar">Editar</button>';
+    if (confirmDel === c.id) h += '<span class="confirm">Apagar este contato? <button class="btn danger" data-act="apagar-sim">Sim, apagar</button><button class="btn" data-act="apagar-nao">Não</button></span>';
+    else h += '<button class="btn ghost danger" data-act="apagar">Apagar</button>';
+    h += '</div></article>';
+    return h;
+  }
+
+  function vazio(texto) { return '<div class="empty">' + texto + '</div>'; }
+
+  // ---------- render ----------
+  function enviadasHoje() { const h = hoje(); let n = 0; contatos.forEach((c) => (c.envios || []).forEach((d) => { if (d === h) n++; })); return n; }
+
+  function render() {
+    const h = hoje();
+    const ativos = contatos.filter((c) => !c.exemplo || true);
+    const fu = ativos.filter((c) => ["enviado", "fu1", "fu2"].includes(c.status) && c.proxima && c.proxima <= h).sort((a, b) => a.proxima.localeCompare(b.proxima));
+    const resp = ativos.filter((c) => ["respondeu", "interessado", "proposta"].includes(c.status) && (!c.proxima || c.proxima <= h));
+    const enviadas = enviadasHoje();
+    const restam = Math.max(0, Number(cfg.meta) - enviadas);
+    const novosTodos = ativos.filter((c) => c.status === "a_enviar").sort((a, b) => (a.criadoEm || "").localeCompare(b.criadoEm || ""));
+    const novos = novosTodos.slice(0, restam);
+
+    $("q-num").textContent = enviadas; $("q-meta").textContent = cfg.meta;
+    $("q-bar").style.width = Math.min(100, (enviadas / Math.max(1, cfg.meta)) * 100) + "%";
+    $("c-hoje").textContent = fu.length + resp.length + novos.length;
+    $("c-contatos").textContent = contatos.length;
+
+    $("list-fu").innerHTML = fu.length ? fu.map((c) => cartao(c)).join("") : vazio("Nenhum follow-up para hoje.");
+    $("list-resp").innerHTML = resp.length ? resp.map((c) => cartao(c, { semMensagem: true })).join("") : vazio("Ninguém esperando resposta sua agora.");
+    $("novos-hint").textContent = novosTodos.length ? "Mostrando " + novos.length + " de " + novosTodos.length + " na fila (meta do dia: " + cfg.meta + ")" : "";
+    if (!novosTodos.length) $("list-novos").innerHTML = vazio('A fila está vazia. Vá em <b>Adicionar</b> e cadastre os corretores que encontrou hoje.');
+    else if (!novos.length) $("list-novos").innerHTML = vazio("Você já bateu a meta de hoje. Os próximos ficam para amanhã, para proteger o seu número.");
+    else $("list-novos").innerHTML = novos.map((c) => cartao(c)).join("");
+
+    // contatos
+    const chips = [["todos", "Todos"]].concat(Object.entries(STATUS).map(([k, v]) => [k, v.t]));
+    $("chips").innerHTML = chips.map(([k, t]) => {
+      const n = k === "todos" ? contatos.length : contatos.filter((c) => c.status === k).length;
+      return '<button class="chip" data-filtro="' + k + '" aria-pressed="' + (filtro === k) + '">' + t + ' (' + n + ')</button>';
+    }).join("");
+    const q = busca.trim().toLowerCase();
+    const lista = contatos.filter((c) => (filtro === "todos" || c.status === filtro) &&
+      (!q || [c.nome, c.bairro, c.telefone, c.imovel, c.fonte].join(" ").toLowerCase().includes(q)))
+      .sort((a, b) => (b.atualizadoEm || b.criadoEm || "").localeCompare(a.atualizadoEm || a.criadoEm || ""));
+    $("list-todos").innerHTML = lista.length ? lista.map((c) => cartao(c)).join("") : vazio(contatos.length ? "Nenhum contato com esse filtro." : "Nenhum contato ainda. Comece pela aba <b>Adicionar</b>.");
+
+    renderResultados();
+    renderTemplates();
+  }
+
+  function renderResultados() {
+    const real = contatos.filter((c) => !c.exemplo);
+    const enviados = real.filter((c) => c.enviadoEm);
+    const resp = enviados.filter((c) => c.respondeuEm);
+    const inter = enviados.filter((c) => ["interessado", "proposta", "fechado"].includes(c.status) || c.interessadoEm);
+    const prop = enviados.filter((c) => ["proposta", "fechado"].includes(c.status) || c.propostaEm);
+    const fech = enviados.filter((c) => c.status === "fechado");
+    const pct = (a, b) => b ? Math.round((a / b) * 100) + "%" : "—";
+    const linhas = [["Contatos cadastrados", real.length, ""], ["Receberam o 1º contato", enviados.length, ""], ["Responderam", resp.length, pct(resp.length, enviados.length)],
+      ["Interessados", inter.length, pct(inter.length, enviados.length)], ["Receberam proposta", prop.length, pct(prop.length, enviados.length)], ["Fecharam", fech.length, pct(fech.length, enviados.length)]];
+    $("funil").innerHTML = '<thead><tr><th>Etapa</th><th class="n">Pessoas</th><th class="n">% dos enviados</th></tr></thead><tbody>' +
+      linhas.map((l) => '<tr><td>' + l[0] + '</td><td class="n">' + l[1] + '</td><td class="n">' + (l[2] || "—") + '</td></tr>').join("") + '</tbody>';
+    $("por-tpl").innerHTML = '<thead><tr><th>Mensagem de abertura</th><th class="n">Enviadas</th><th class="n">Responderam</th><th class="n">Taxa</th><th class="n">Fecharam</th></tr></thead><tbody>' +
+      TEMPLATES.map((t) => {
+        const e = enviados.filter((c) => c.tpl === t.id), r = e.filter((c) => c.respondeuEm), f = e.filter((c) => c.status === "fechado");
+        return '<tr><td>' + esc(t.nome) + (e.length && e.length < 30 ? ' <span class="pill">amostra pequena</span>' : '') + '</td><td class="n">' + e.length + '</td><td class="n">' + r.length + '</td><td class="n">' + pct(r.length, e.length) + '</td><td class="n">' + f.length + '</td></tr>';
+      }).join("") + '</tbody>';
+  }
+
+  function renderTemplates() {
+    const bloco = (titulo, texto, dica) => '<div class="tpl"><h3>' + esc(titulo) + '</h3>' + (dica ? '<div class="hint">' + dica + '</div>' : '') + '<pre>' + esc(texto) + '</pre><div class="actions"><button class="btn" data-copy="' + esc(texto) + '">Copiar</button></div></div>';
+    let h = '<h2>Abertura</h2>' + TEMPLATES.map((t) => bloco(t.nome, t.texto)).join("");
+    h += '<h2>Follow-ups</h2>' + bloco("1º follow-up (" + cfg.fu1 + " dias depois)", FOLLOW.fu1) + bloco("Último follow-up (" + cfg.fu2 + " dias depois)", FOLLOW.fu2) + bloco("Nova tentativa (" + cfg.volta + " dias depois)", FOLLOW.volta, "Só para quem não respondeu e não pediu para parar.");
+    h += '<h2>Respostas prontas</h2>' + RESPOSTAS.map((r) => bloco(r.nome, fill(r.texto, {}))).join("");
+    $("tpl-list").innerHTML = h;
+  }
+
+  // ---------- eventos ----------
+  document.querySelector("nav.tabs").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-tab]"); if (!b) return; abrirAba(b.dataset.tab);
+  });
+  function abrirAba(tab) {
+    document.querySelectorAll("nav.tabs button").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.tab === tab)));
+    document.querySelectorAll("section.view").forEach((s) => (s.hidden = s.id !== "view-" + tab));
+    try { localStorage.setItem("aba", tab); } catch (e) {}
+  }
+
+  document.addEventListener("click", async (e) => {
+    const cp = e.target.closest("[data-copy]"); if (cp) { copiar(cp.getAttribute("data-copy")); return; }
+    const ch = e.target.closest("[data-filtro]"); if (ch) { filtro = ch.dataset.filtro; render(); return; }
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const card = b.closest("[data-id]"); const c = contatos.find((x) => x.id === card.dataset.id); if (!c) return;
+    const ta = card.querySelector("textarea");
+    const act = b.dataset.act;
+    if (act === "wa") { b.href = "https://wa.me/" + digitos(c.telefone) + "?text=" + encodeURIComponent(ta ? ta.value : ""); return; }
+    e.preventDefault();
+    const h = hoje();
+    if (act === "copiar") copiar(ta ? ta.value : "", ta);
+    else if (act === "enviado") marcarEnviado(c);
+    else if (act === "respondeu") atualizar(c, { status: "respondeu", respondeuEm: c.respondeuEm || h, proxima: h });
+    else if (act === "interessado") atualizar(c, { status: "interessado", interessadoEm: h, proxima: h });
+    else if (act === "proposta") atualizar(c, { status: "proposta", propostaEm: h, proxima: addDias(2) });
+    else if (act === "fechado") atualizar(c, { status: "fechado", fechadoEm: h, proxima: null });
+    else if (act === "sem_interesse") atualizar(c, { status: "sem_interesse", proxima: null });
+    else if (act === "parar") atualizar(c, { status: "parar", pararEm: h, proxima: null });
+    else if (act === "editar") editar(c);
+    else if (act === "apagar") { confirmDel = c.id; render(); }
+    else if (act === "apagar-nao") { confirmDel = null; render(); }
+    else if (act === "apagar-sim") { confirmDel = null; try { await db.collection("contatos").doc(c.id).delete(); toast("Contato apagado"); } catch (err) { toast("Não consegui apagar. Tente de novo."); } }
+  });
+
+  $("busca").addEventListener("input", (e) => { busca = e.target.value; render(); });
+
+  function preencherSelects() {
+    const opts = TEMPLATES.map((t) => '<option value="' + t.id + '">' + esc(t.nome) + '</option>').join("");
+    $("f-tpl").innerHTML = opts; $("bulk-tpl").innerHTML = opts;
+    $("f-status").innerHTML = Object.entries(STATUS).map(([k, v]) => '<option value="' + k + '">' + v.t + '</option>').join("");
+  }
+  $("f-tipo").addEventListener("change", () => { if ($("f-tipo").value === "imobiliaria") $("f-tpl").value = "imob"; });
+
+  function editar(c) {
+    editId = c.id;
+    $("f-nome").value = c.nome || ""; $("f-tel").value = c.telefone || ""; $("f-tipo").value = c.tipo || "corretor"; $("f-tpl").value = c.tpl || "anuncio";
+    $("f-imovel").value = c.imovel || ""; $("f-bairro").value = c.bairro || ""; $("f-fonte").value = c.fonte || ""; $("f-indicador").value = c.indicador || ""; $("f-notas").value = c.notas || "";
+    $("f-status").value = c.status; $("form-status-row").hidden = false;
+    $("form-title").textContent = "Editar contato"; $("form-save").textContent = "Salvar alterações"; $("form-cancel").hidden = false;
+    abrirAba("novo"); $("f-nome").focus();
+  }
+  function limparForm() {
+    editId = null; $("form").reset(); $("form-status-row").hidden = true;
+    $("form-title").textContent = "Novo contato"; $("form-save").textContent = "Salvar contato"; $("form-cancel").hidden = true;
+  }
+  $("form-cancel").addEventListener("click", limparForm);
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const dados = {
+      nome: $("f-nome").value.trim(), telefone: $("f-tel").value.trim(), tipo: $("f-tipo").value, tpl: $("f-tpl").value,
+      imovel: $("f-imovel").value.trim(), bairro: $("f-bairro").value.trim(), fonte: $("f-fonte").value.trim(), indicador: $("f-indicador").value.trim(), notas: $("f-notas").value.trim()
+    };
+    const d = digitos(dados.telefone);
+    if (d.length < 12) { toast("Confira o telefone: coloque o DDD e o número completo"); $("f-tel").focus(); return; }
+    const dup = contatos.find((c) => digitos(c.telefone) === d && c.id !== editId);
+    if (dup) { toast("Esse número já está cadastrado: " + dup.nome); return; }
+    if (editId) {
+      const c = contatos.find((x) => x.id === editId);
+      if (c && await atualizar(c, { ...dados, status: $("f-status").value })) { limparForm(); abrirAba("contatos"); }
+    } else {
+      const id = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const ok = await salvar(id, { ...dados, status: "a_enviar", criadoEm: new Date().toISOString(), envios: [] });
+      if (ok) { toast("Contato salvo na fila"); limparForm(); $("f-nome").focus(); }
+    }
+  });
+
+  $("bulk-go").addEventListener("click", async () => {
+    const linhas = $("bulk").value.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (!linhas.length) { toast("Cole pelo menos uma linha"); return; }
+    let ok = 0, pulados = 0;
+    const vistos = new Set(contatos.map((c) => digitos(c.telefone)));
+    for (const l of linhas) {
+      const p = l.split(/;|\t/).map((x) => x.trim());
+      const [nome, telefone, imovel, bairro, fonte] = p;
+      const d = digitos(telefone);
+      if (!nome || d.length < 12 || vistos.has(d)) { pulados++; continue; }
+      vistos.add(d);
+      const id = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const tpl = $("bulk-tpl").value;
+      if (await salvar(id, { nome, telefone, tipo: tpl === "imob" ? "imobiliaria" : "corretor", tpl, imovel: imovel || "", bairro: bairro || "", fonte: fonte || "", indicador: "", notas: "", status: "a_enviar", criadoEm: new Date().toISOString(), envios: [] })) ok++;
+      else break;
+    }
+    toast(ok + " importados" + (pulados ? ", " + pulados + " pulados (sem nome, telefone incompleto ou repetido)" : ""));
+    if (ok) $("bulk").value = "";
+  });
+
+  function preencherCfg() { $("c-meta").value = cfg.meta; $("c-fu1").value = cfg.fu1; $("c-fu2").value = cfg.fu2; $("c-volta").value = cfg.volta; $("c-p1").value = cfg.p1; $("c-p2").value = cfg.p2; }
+  $("cfg").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const novo = { meta: Number($("c-meta").value) || 20, fu1: Number($("c-fu1").value) || 3, fu2: Number($("c-fu2").value) || 4, volta: Number($("c-volta").value) || 30, p1: $("c-p1").value.trim() || "3.500", p2: $("c-p2").value.trim() || "2.500" };
+    if (!db) { toast("Sem conexão com os dados"); return; }
+    try { await db.doc("config/geral").set(novo); toast("Ajustes salvos"); } catch (err) { toast("Não consegui salvar os ajustes."); }
+  });
+
+  // ---------- início ----------
+  preencherSelects(); preencherCfg();
+  try { const a = localStorage.getItem("aba"); if (a && $("view-" + a)) abrirAba(a); } catch (e) {}
+  render();
+
+  (async function conectar() {
+    db = window.claude && window.claude.use ? await window.claude.use("db") : null;
+    if (!db) { note("Não consegui acessar seus dados. Abra esta página no claude.ai, com a sua conta, para ver e salvar os contatos.", "bad"); return; }
+    const timer = setTimeout(() => note("Os dados estão demorando para carregar. Confira a sua conexão; a página continua tentando.", "warn"), 10000);
+    db.collection("contatos").onSnapshot((snap) => {
+      if (!snap.metadata.fromCache) { clearTimeout(timer); note(null); }
+      contatos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      render();
+    }, (err) => { clearTimeout(timer); note("A conexão com os dados caiu. Recarregue a página para tentar de novo.", "bad"); });
+    db.doc("config/geral").onSnapshot((snap) => {
+      if (snap.exists) { cfg = { ...DEFAULT_CFG, ...snap.data() }; preencherCfg(); render(); }
+    }, () => {});
+  })();
+})();
+</script>
