@@ -70,3 +70,29 @@ Depois disso, pare. Anote a data e volte só com algo útil depois de uns 30 dia
 |---|---|---|---|---|---|---|
 
 Depois de uns 30 contatos, compare qual versão (1, 1B ou 1C) teve mais respostas e passe a usar mais a melhor.
+
+## Versão sem Instagram próprio (contato direto por WhatsApp)
+
+Onde achar números comerciais públicos: anúncios de imóveis em portais e classificados (ZAP, VivaReal, OLX etc.), sites de imobiliárias, Google Maps (imobiliárias da região), bio do Instagram dos corretores e indicações. Anote de onde veio cada número. Não compre listas e não copie dados em massa com robôs.
+
+Use o WhatsApp Business (gratuito) com foto, nome, descrição do serviço e e-mail preenchidos.
+
+**Primeiro contato (a partir de um anúncio):**
+> Oi, [nome]! Tudo bem? Vi seu anúncio do [imóvel] em [bairro] no [portal/site].
+>
+> Eu ajudo corretores a divulgar os imóveis nas redes sociais sem perder tempo: crio roteiros de vídeos curtos, artes e deixo tudo agendado no Instagram, TikTok, YouTube e Google, sem anúncio pago.
+>
+> Posso te mandar um roteiro de vídeo para esse imóvel, sem compromisso?
+>
+> _(Se não tiver interesse, é só me avisar que não te mando mais mensagens.)_
+
+**Para imobiliárias (um contato que pode abrir vários corretores):**
+> Olá! Tudo bem? Falo com o responsável pela [imobiliária]?
+>
+> Eu estruturo as redes sociais de corretores e imobiliárias: roteiros de vídeos curtos, artes dos imóveis, agendamento em todas as redes e respostas automáticas levando o cliente para o WhatsApp. Tudo orgânico, sem anúncio.
+>
+> Posso te mostrar um exemplo com um dos imóveis de vocês?
+>
+> _(Se não tiver interesse, é só me avisar que não te mando mais mensagens.)_
+
+Rotina: 15 a 20 contatos por dia, cada mensagem com o nome e o imóvel daquela pessoa. Quem pedir para parar sai da lista na hora.
