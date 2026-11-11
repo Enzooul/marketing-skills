@@ -32,6 +32,13 @@ Antes de qualquer trabalho de marketing num projeto novo, rode `marketing-contex
 | "está com cara de IA", "deixa mais humano" | `content-humanizer` |
 | "post para Instagram/TikTok/redes" | `social-content` |
 | "estratégia de redes sociais" | `social-media-manager` |
+| "Reel", "roteiro de Reel", "gancho/hook para vídeo do Instagram" | `ig-reel` |
+| "legenda do Instagram" | `ig-caption`; carrossel: `ig-carousel`; stories: `ig-story` |
+| "o que está viralizando no meu nicho?" | `ig-viral` |
+| "avalia meu perfil do Instagram" | `ig-profile`; plano da semana: `ig-plan`; análise do que já postei: `ig-audit` |
+| "comentar/responder/DM no Instagram" | `ig-comment`, `ig-reply`, `ig-dm` |
+| "transforma esse vídeo/podcast em posts para o Instagram" | `ig-repurpose` |
+| "tira a cara de IA do texto do Instagram" | `ig-human` |
 | "como foram meus posts/engajamento" | `social-media-analyzer` |
 | "crescer no X/Twitter", "thread" | `x-twitter-growth` |
 | "LinkedIn" (perfil, post, estratégia, conexões, métricas) | `linkedin-skills` |
@@ -54,3 +61,5 @@ Antes de qualquer trabalho de marketing num projeto novo, rode `marketing-contex
 | "manual da marca", "tom de voz" | `brand-guidelines` |
 | "ROI da campanha", "atribuição" | `campaign-analytics` |
 | "GA4", "Tag Manager", "rastreamento" | `analytics-tracking` |
+
+As skills `ig-*` vêm de github.com/Jakeschincariol/instagram-agent-skill (MIT, commit d03c56b; licença e README em `docs/instagram-agent-skill/`). Elas escrevem em inglês por padrão: peça o texto em português. Nunca publicam nada; o usuário posta. O perfil de voz (`voice.md`) que elas leem em `~/.claude/instagram/` se perde quando a sessão na nuvem termina: guarde a versão preenchida em `docs/instagram-agent-skill/voice.md` e copie para lá no começo da sessão.
