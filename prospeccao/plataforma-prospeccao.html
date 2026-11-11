@@ -235,6 +235,8 @@ details summary { cursor: pointer; font-weight: 500; }
 <script>
 (function () {
   const TEMPLATES = [
+    { id: "sc", nome: "Litoral de SC (comprador de fora)", texto:
+"Oi, {nome}! Tudo bem? Vi no seu site os imóveis que você trabalha em {bairro}.\n\nQuem compra aí vindo de outra cidade costuma conhecer o imóvel primeiro pelo vídeo, né? Eu ajudo corretores justamente nisso: transformo os imóveis em vídeos curtos e posts agendados no Instagram, TikTok, YouTube e Google, sem anúncio pago. Você só grava pelo celular e aprova.\n\nPosso te mandar um roteiro de vídeo pra um dos seus imóveis, sem compromisso?\n\n(Se não tiver interesse, é só me avisar que não te mando mais mensagens.)" },
     { id: "site", nome: "Achei o site dele", texto:
 "Oi, {nome}! Tudo bem? Encontrei o seu site e vi que você trabalha com {imovel} em {bairro}.\n\nEu ajudo corretores a divulgar os imóveis nas redes sociais sem perder tempo: crio roteiros de vídeos curtos, artes dos imóveis e deixo tudo agendado no Instagram, TikTok, YouTube e Google, sem anúncio pago. Você só aprova e grava.\n\nPosso te mandar um roteiro de vídeo para um dos seus imóveis, sem compromisso?\n\n(Se não tiver interesse, é só me avisar que não te mando mais mensagens.)" },
     { id: "anuncio", nome: "A partir de um anúncio", texto:
@@ -398,7 +400,7 @@ details summary { cursor: pointer; font-weight: 500; }
 
   // Qual mensagem mandar agora, conforme a situação
   function proximaMensagem(c) {
-    if (c.status === "a_enviar") return { tipo: "abertura", texto: fill(tplById(c.tpl).texto, c), botao: "Enviei o 1º contato" };
+    if (c.status === "a_enviar") return { tipo: "abertura", texto: c.msgPronta ? c.msgPronta : fill(tplById(c.tpl).texto, c), botao: "Enviei o 1º contato", pronta: !!c.msgPronta };
     if (c.status === "enviado") return { tipo: "fu1", texto: fill(FOLLOW.fu1, c), botao: "Enviei o follow-up 1" };
     if (c.status === "fu1") return { tipo: "fu2", texto: fill(FOLLOW.fu2, c), botao: "Enviei o último follow-up" };
     if (c.status === "fu2") return { tipo: "volta", texto: fill(FOLLOW.volta, c), botao: "Enviei a nova tentativa" };
@@ -443,7 +445,7 @@ details summary { cursor: pointer; font-weight: 500; }
       h += '<div class="notice bad">Esta pessoa pediu para não receber mais mensagens. Não envie de novo.</div>';
     } else if (msg) {
       const tid = "msg-" + c.id;
-      h += '<div class="field"><label for="' + tid + '" class="label">' + (msg.tipo === "abertura" ? "Mensagem de abertura (" + esc(tplById(c.tpl).nome) + ")" : msg.tipo === "fu1" ? "1º follow-up" : msg.tipo === "fu2" ? "Último follow-up" : "Nova tentativa") + ' · edite se quiser</label>' +
+      h += '<div class="field"><label for="' + tid + '" class="label">' + (msg.tipo === "abertura" ? (msg.pronta ? "Mensagem personalizada para este corretor" : "Mensagem de abertura (" + esc(tplById(c.tpl).nome) + ")") : msg.tipo === "fu1" ? "1º follow-up" : msg.tipo === "fu2" ? "Último follow-up" : "Nova tentativa") + ' · edite se quiser</label>' +
         '<textarea id="' + tid + '">' + esc(msg.texto) + '</textarea></div>';
       if (/\[\w+\]/.test(msg.texto)) h += '<div class="hint">Os campos entre colchetes ficaram sem dado: complete no texto antes de enviar, ou edite o contato.</div>';
       h += '<div class="actions">' +
